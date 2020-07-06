@@ -16,6 +16,7 @@
 		28C6476E24B2FE2D0093FF02 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C6476D24B2FE2D0093FF02 /* Extensions.swift */; };
 		28C6477124B2FEAE0093FF02 /* VideoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C6477024B2FEAE0093FF02 /* VideoCell.swift */; };
 		28C6477424B300780093FF02 /* MenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C6477324B300780093FF02 /* MenuBar.swift */; };
+		28C6477724B3259C0093FF02 /* Video.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C6477624B3259C0093FF02 /* Video.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		28C6476D24B2FE2D0093FF02 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		28C6477024B2FEAE0093FF02 /* VideoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCell.swift; sourceTree = "<group>"; };
 		28C6477324B300780093FF02 /* MenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBar.swift; sourceTree = "<group>"; };
+		28C6477624B3259C0093FF02 /* Video.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Video.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 		28251B4A24AF0C00007C9DA9 /* Swift Youtube App Programmatically */ = {
 			isa = PBXGroup;
 			children = (
+				28C6477524B325880093FF02 /* Model */,
 				28C6476F24B2FE890093FF02 /* View */,
 				28C6477224B2FECB0093FF02 /* Controller */,
 				28C6476C24B2FE1E0093FF02 /* Helpers */,
@@ -98,6 +101,14 @@
 				28251B4F24AF0C00007C9DA9 /* HomeController.swift */,
 			);
 			path = Controller;
+			sourceTree = "<group>";
+		};
+		28C6477524B325880093FF02 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				28C6477624B3259C0093FF02 /* Video.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -175,6 +186,7 @@
 				28C6477424B300780093FF02 /* MenuBar.swift in Sources */,
 				28251B4C24AF0C00007C9DA9 /* AppDelegate.swift in Sources */,
 				28251B4E24AF0C00007C9DA9 /* SceneDelegate.swift in Sources */,
+				28C6477724B3259C0093FF02 /* Video.swift in Sources */,
 				28C6476E24B2FE2D0093FF02 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

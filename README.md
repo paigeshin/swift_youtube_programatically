@@ -882,3 +882,108 @@ class MenuCell: BaseCell {
 //
 //}
 ```
+# Lecture 4
+
+# Model - View - Controller
+
+# Set up `Search` or `More`
+
+```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    /* Navigation Controller Design */
+    navigationItem.title = "Home"
+    
+    navigationController?.navigationBar.isTranslucent = false
+    let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width - 32, height: view.frame.height))
+    titleLabel.text = "Home"
+    titleLabel.textColor = UIColor.white
+    titleLabel.font = UIFont.systemFont(ofSize: 20)
+    navigationItem.titleView = titleLabel
+    collectionView.backgroundColor = UIColor.white
+
+    
+    //Register Class Cell
+    /*
+     cell을 등록할 때
+     UINib을 등록하는 방법이랑,
+     class를 등록하는 방법이 있다.
+     */
+    collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
+    
+    /* Adjust Collection View Position */
+    collectionView.contentInset = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
+    collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
+    
+    /* SetupMenuBar */
+    setupMenuBar()
+        
+    /* Set up Navbar buttons */
+    setupNavBarButtons()
+}
+
+/* Set up Navbar buttons */
+func setupNavBarButtons() {
+    //image names: magnifyingglass, bolt.circle
+    let searchImage = UIImage(systemName: "magnifyingglass")?.withRenderingMode(.alwaysTemplate)
+    searchImage?.withTintColor(UIColor.white)
+    let moreImage = UIImage(systemName: "bolt.circle")?.withRenderingMode(.alwaysTemplate)
+    moreImage?.withTintColor(UIColor.white)
+    let searchBarButton = UIBarButtonItem(image: searchImage, style: .plain, target: self, action: #selector(handleSearch))
+    searchBarButton.tintColor = UIColor.white
+    let moreButton = UIBarButtonItem(image: moreImage, style: .plain, target: self, action: #selector(handleMore))
+    moreButton.tintColor = UIColor.white
+    navigationItem.rightBarButtonItems = [searchBarButton, moreButton]
+}
+
+@objc func handleSearch() {
+    print(123)
+}
+
+@objc func handleMore() {
+    print(456)
+}
+```
+
+**ℹ️  Number Formatter**
+
+```swift
+if let channelName = video?.channel?.name, let numberOfViews = video?.numberOfViews {
+    let numberFormatter = NumberFormatter()
+    numberFormatter.numberStyle = .decimal
+    
+    let subtitleText = "\(channelName) • \(numberFormatter.string(from: numberOfViews)!) • 2 years ago"
+    subtitleTextView.text = subtitleText
+}
+```
+
+⇒ 자동으로 000 마다 `,` 를 추가해준다.
+
+### Label 크기 가져오기
+
+`NSString` `boundingRect()` 을 쓰면 rectangle의 값을 가져올 수 있다.
+
+```swift
+/** Dynamically change constraint **/
+  //measure title text
+  if let title = video?.title {
+      /*
+       16: left constraint
+       44: profile constraint (width)
+       8: space between profile and title
+       16: right constraint
+       => Label Size
+       */
+      let size = CGSize(width: frame.width - 16 - 44 - 8 - 16, height: 1000)
+      let options = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
+      /* boundingRect라는 함수를 호출하여 크기를 가져올 수 있다. */
+      let estimatedRect = NSString(string: title)
+          .boundingRect(with: size, options: options, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)], context: nil)
+      if estimatedRect.size.height > 20 {
+          titleLabelHeightConstraint?.constant = 44
+      } else {
+          titleLabelHeightConstraint?.constant = 20
+      }
+  }
+```

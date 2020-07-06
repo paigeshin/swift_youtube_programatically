@@ -9,6 +9,27 @@ import UIKit
 
 class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     
+    var videos: [Video] = {
+        
+        var kanyeChannel = Channel()
+        kanyeChannel.name = "KayneIsTheBestChannel"
+        kanyeChannel.profileImagename = "profile"
+        
+        var blankSpaceVideo = Video()
+        blankSpaceVideo.title = "Taylor Swift - Blank Space"
+        blankSpaceVideo.thumbnailImageName = "thumbnail"
+        blankSpaceVideo.channel = kanyeChannel
+        blankSpaceVideo.numberOfViews = 23048933
+        
+        var badBloodVideo = Video()
+        badBloodVideo.title = "Taylor Swift - Bad Blood featuing Kendrick Lamar"
+        badBloodVideo.thumbnailImageName = "thumbnail"
+        badBloodVideo.channel = kanyeChannel
+        badBloodVideo.numberOfViews = 50435243
+        
+        return [blankSpaceVideo, badBloodVideo]
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -38,6 +59,31 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         
         /* SetupMenuBar */
         setupMenuBar()
+        
+        /* Set up Navbar buttons */
+        setupNavBarButtons()
+    }
+    
+    /* Set up Navbar buttons */
+    func setupNavBarButtons() {
+        //image names: magnifyingglass, bolt.circle
+        let searchImage = UIImage(systemName: "magnifyingglass")?.withRenderingMode(.alwaysTemplate)
+        searchImage?.withTintColor(UIColor.white)
+        let moreImage = UIImage(systemName: "bolt.circle")?.withRenderingMode(.alwaysTemplate)
+        moreImage?.withTintColor(UIColor.white)
+        let searchBarButton = UIBarButtonItem(image: searchImage, style: .plain, target: self, action: #selector(handleSearch))
+        searchBarButton.tintColor = UIColor.white
+        let moreButton = UIBarButtonItem(image: moreImage, style: .plain, target: self, action: #selector(handleMore))
+        moreButton.tintColor = UIColor.white
+        navigationItem.rightBarButtonItems = [searchBarButton, moreButton]
+    }
+    
+    @objc func handleSearch() {
+        print(123)
+    }
+    
+    @objc func handleMore() {
+        print(456)
     }
     
     /* Create Menubar */
@@ -53,12 +99,13 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 5
+        return videos.count
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         //Register Cell
-        let cell: UICollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath)
+        let cell: VideoCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! VideoCell
+        cell.video = videos[indexPath.row]
         return cell
     }
     
@@ -70,7 +117,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         let ratio: CGFloat = 9 / 16
         let height: CGFloat = (view.frame.width - leftSideContstant - rightSideConstant) * ratio
         //16:9 thumnail을 만들기 위해서, height의 크기를 다른 contraint constant만큼 더해준다.
-        return CGSize(width: view.frame.width, height: height + 16 + 68)
+        return CGSize(width: view.frame.width, height: height + 16 + 88)
 //        return CGSize(width: view.frame.width, height: 900)
 //        return CGSize(width: view.frame.width, height: 500)
     }
