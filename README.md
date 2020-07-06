@@ -25,8 +25,8 @@ var window: UIWindow?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
        
-        window = UIWindow(frame: UIScreen.main.bounds)
-        window?.makeKeyAndVisible()
+        //window = UIWindow(frame: UIScreen.main.bounds)  ios13에서는 할 필요 없음. ios11일 경우 appDelegate에서 해준다.
+        //window?.makeKeyAndVisible()
         let layout = UICollectionViewFlowLayout()
         window?.rootViewController = UINavigationController(rootViewController: HomeController(collectionViewLayout: layout))
         
@@ -393,4 +393,259 @@ extension UIView {
     }
     
 }
+```
+
+# Lecture - 2
+
+- Custom Navigation Bar
+- MVC Clean up
+
+### clipsToBound
+
+`clipsToBound = true`
+
+```swift
+imageView.clipsToBounds = true
+```
+
+⇒ 이미지가 bound 밖으로 나가지 못하게 함.
+
+![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/30588180-f7e9-4602-96db-4dd547699c27/Untitled.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/30588180-f7e9-4602-96db-4dd547699c27/Untitled.png)
+
+### masksToBounds
+
+ `masksToBound = true` 
+
+```swift
+imageView.layer.cornerRadius = 22
+imageView.layer.masksToBounds = true
+```
+
+⇒ masksToBounds를 적용해야 cornerRadius가 적용될 때가 있다.
+
+### masksToBounds vs clipsToBounds
+
+```jsx
+imageView.clipsToBounds = true
+imageView.layer.masksToBounds = true
+```
+
+- `clipsToBounds` 는 view의 property
+- `masksToBounds` 는 layer의 property
+
+**masksToBounds:** 
+
+When the value of this property is `true`, Core Animation creates an implicit clipping mask that matches the bounds of the layer and includes any corner radius effects. If a value for the `[mask](https://developer.apple.com/documentation/quartzcore/calayer/1410861-mask)` property is also specified, the two masks are multiplied to get the final mask value.
+
+The default value of this property is `false`.
+
+**clipsToBounds:**
+
+Setting this value to true causes subviews to be clipped to the bounds of the receiver. If set to false, subviews whose frames extend beyond the visible bounds of the receiver are not clipped. The default value is false.
+
+⇒ 내가 적용해보니 둘 다 똑같은 기능을 하는 것 같다.
+
+### textContainerInset
+
+```swift
+let subtitleTextView: UITextView = {
+    let textView = UITextView()
+    textView.translatesAutoresizingMaskIntoConstraints = false
+    textView.text = "TaylerSwiftVEVO • 1,604,684,608 views • 2 years"
+    //edge 추가
+    textView.textContainerInset = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 0)
+    return textView
+}()
+```
+
+### how to get 9:16 ratio
+
+```swift
+//각각의 cell container의 크기
+func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    //16:9
+    let leftSideContstant: CGFloat = 16
+    let rightSideConstant: CGFloat = 16
+    let ratio: CGFloat = 9 / 16
+    let height: CGFloat = (view.frame.width - leftSideContstant - rightSideConstant) * ratio
+    return CGSize(width: view.frame.width, height: height)
+}
+```
+
+- 부족한 height값 추가해주기
+
+```swift
+//각각의 cell container의 크기
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        //16:9
+        let leftSideContstant: CGFloat = 16
+        let rightSideConstant: CGFloat = 16
+        let ratio: CGFloat = 9 / 16
+        let height: CGFloat = (view.frame.width - leftSideContstant - rightSideConstant) * ratio
+        //16:9 thumnail을 만들기 위해서, height의 크기를 다른 contraint constant만큼 더해준다.
+        return CGSize(width: view.frame.width, height: height + 16 + 68) //여기서 16, 68은 다른 것들이 차지하는 것을 의미한다.
+    }
+```
+
+![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/cb7398b7-2990-4c89-8cb5-465318095949/Screen_Shot_2020-07-03_at_19.12.01.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/cb7398b7-2990-4c89-8cb5-465318095949/Screen_Shot_2020-07-03_at_19.12.01.png)
+
+### Design UINavigationBar Programmatically
+
+```swift
+func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+
+// API below is only for less than iOS 13       
+//        window = UIWindow(frame: UIScreen.main.bounds)
+//        window?.makeKeyAndVisible()
+
+    let layout = UICollectionViewFlowLayout()
+    window?.rootViewController = UINavigationController(rootViewController: HomeController(collectionViewLayout: layout))
+    
+    UINavigationBar.appearance().barTintColor = UIColor(red: 230/255, green: 32/255, blue: 31/255, alpha: 1)
+    
+    
+    guard let _ = (scene as? UIWindowScene) else { return }
+}
+```
+
+ℹ️  Swift Symbolic Language 
+
+`V:|[v0(20)]|` 와 `V:|[v0(20)]` 의 차이. 
+
+```swift
+//swift format language에서 V:|[v0(20)]|를 하면, 마지막 constraint 값이 0이라는 의미다.
+//swift format language에서 V:|[v0(20)]를 하면, 마지막 cosntraint 값이 없다.
+window?.addConstraintsWithFormat(format: "V:|[v0(20)]", views: statusBarBackgroundView)
+```
+
+### Navigation Controller 꾸며주기
+
+```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    /* Navigation Controller Design */
+    navigationItem.title = "Home"
+    
+    navigationController?.navigationBar.isTranslucent = false
+    let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width - 32, height: view.frame.height))
+    titleLabel.text = "Home"
+    titleLabel.textColor = UIColor.white
+    titleLabel.font = UIFont.systemFont(ofSize: 20)
+    navigationItem.titleView = titleLabel
+    collectionView.backgroundColor = UIColor.white
+
+    
+    //Register Class Cell
+    /*
+     cell을 등록할 때
+     UINib을 등록하는 방법이랑,
+     class를 등록하는 방법이 있다.
+     */
+    collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
+}
+```
+
+---
+
+아래 정보들은 확실하지 않음, 그냥 참고만 할 것.
+
+# Change statusBarStyle color
+
+### **UIStatusBarManager**
+
+An object describing the configuration of the status bar.
+
+**Availability**
+
+- iOS 13.0+
+- Mac Catalyst 13.0+
+
+**Framework**
+
+- UIKit
+
+**On This Page**[Declaration](https://developer.apple.com/documentation/uikit/uistatusbarmanager#declaration) [Overview](https://developer.apple.com/documentation/uikit/uistatusbarmanager#overview) [Topics](https://developer.apple.com/documentation/uikit/uistatusbarmanager#topics) [Relationships](https://developer.apple.com/documentation/uikit/uistatusbarmanager#relationships) [See Also](https://developer.apple.com/documentation/uikit/uistatusbarmanager#see-also)
+
+### **UIStatusBarManager**
+
+`class UIStatusBarManager : [NSObject](https://developer.apple.com/documentation/objectivec/nsobject)`
+
+### **Overview**
+
+Use a `UIStatusBarManager` object to get the current configuration of the status bar for its associated scene. You do not create `UIStatusBarManager` objects directly. Instead, you retrieve an existing object from the `[statusBarManager](https://developer.apple.com/documentation/uikit/uiwindowscene/3213943-statusbarmanager)` property of a `UIWindowScene` object.
+
+You do not use this object to modify the configuration of the status bar. Instead, you set the status bar configuration individually for each of your `[UIViewController](https://developer.apple.com/documentation/uikit/uiviewcontroller)` objects. For example, to modify the default visibility of the status bar, override the `[prefersStatusBarHidden](https://developer.apple.com/documentation/uikit/uiviewcontroller/1621440-prefersstatusbarhidden)` property of your view controller.
+
+# Change status bar style using navigationBar
+
+In a navigation controller situation, the color of the status bar is not determined by the view controller’s `preferredStatusBarStyle`.
+
+It is determined, amazingly, by the navigation bar’s `barStyle`. To get light status bar text, say (in your view controller):
+
+```swift
+self.navigationController?.navigationBar.barStyle = .black
+
+```
+
+Hard to believe, but true. I got this info directly from Apple, years ago.
+
+You can also perform this setting in the storyboard.
+
+Example! Navigation bar's bar style is `.default`:
+
+![https://i.stack.imgur.com/j6Mz2.png](https://i.stack.imgur.com/j6Mz2.png)
+
+Navigation bar's bar style is `.black`:
+
+![https://i.stack.imgur.com/DxqNb.png](https://i.stack.imgur.com/DxqNb.png)
+
+**NOTE for iOS 13** This still works in iOS 13 as long as you don't use large titles or UIBarAppearance. But basically you are supposed to stop doing this and let the status bar color be automatic with respect to the user's choice of light or dark mode.
+
+ℹ️  statusBar style can also be set by `Navigation Bar Style` 
+
+# Change status bar color using `preferredStatusBarStyle`
+
+info.plist
+
+```swift
+View controller-based status bar appearance : YES 
+
+<key>UIViewControllerBasedStatusBarAppearance</key>
+<true/>
+```
+
+```swift
+override var preferredStatusBarStyle: UIStatusBarStyle {
+      return .lightContent
+}
+```
+
+# Change statusbar style globally
+
+info.plist 
+
+```swift
+View controller-based status bar appearance : NO 
+
+<key>UIViewControllerBasedStatusBarAppearance</key>
+<false/>
+```
+
+```swift
+application.statusBarStyle = .lightContent
+```
+
+⇒ This is however deprecated. You must apply different statusBar style for each ViewController
+
+# Change statusbar style on App Setting
+
+![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0e825b19-17ec-4ac4-9d6c-7f05bcb312d4/Screen_Shot_2020-07-06_at_15.06.07.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0e825b19-17ec-4ac4-9d6c-7f05bcb312d4/Screen_Shot_2020-07-06_at_15.06.07.png)
+
+### 특이한 현상 발견
+
+```swift
+window?.makeKeyAndVisible() //이 코드르 적용하면
+//아래 코드가 작동하지 않는다.
+UINavigationBar.appearance().barTintColor = UIColor.rgb(red: 230, green: 32, blue: 31) 
 ```

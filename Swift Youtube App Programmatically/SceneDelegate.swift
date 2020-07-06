@@ -11,13 +11,36 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
        
+        /* iOS 13 미만 */
 //        window = UIWindow(frame: UIScreen.main.bounds)
 //        window?.makeKeyAndVisible()
+        /**
+         This is a convenience method to show the current window and position it in front of all other windows at the same level or lower. If you only want to show the window, change its isHidden property to false.
+         **/
+        
+        
         let layout = UICollectionViewFlowLayout()
         window?.rootViewController = UINavigationController(rootViewController: HomeController(collectionViewLayout: layout))
+        
+        /* Navigation Controller Design */
+        UINavigationBar.appearance().barTintColor = UIColor.rgb(red: 230, green: 32, blue: 31)
+        
+        
+        /* 아래 코드 작동하지 않음.. */
+        //statusBar끝만 덮어씌우기 방식으로 색깔 바꿔주기
+//        let statusBarBackgroundView = UIView()
+//        statusBarBackgroundView.backgroundColor = UIColor.rgb(red: 194, green: 31, blue: 31)
+//        window?.addSubview(statusBarBackgroundView)
+//        window?.addConstraintsWithFormat(format: "H:|[v0]|", views: statusBarBackgroundView)
+        //swift format language에서 V:|[v0(20)]|를 하면, 마지막 constraint 값이 0이라는 의미다.
+        //swift format language에서 V:|[v0(20)]를 하면, 마지막 cosntraint 값이 없다.
+//        window?.addConstraintsWithFormat(format: "V:|[v0(20)]", views: statusBarBackgroundView)
+        
+        //해당하는 것을 작동시키려면 Info.plist에 `View controller-based status bar appearance - NO`를 추가해줘야 한다.
+        
+        
         
         guard let _ = (scene as? UIWindowScene) else { return }
     }
