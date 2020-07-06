@@ -649,3 +649,236 @@ window?.makeKeyAndVisible() //이 코드르 적용하면
 //아래 코드가 작동하지 않는다.
 UINavigationBar.appearance().barTintColor = UIColor.rgb(red: 230, green: 32, blue: 31) 
 ```
+
+# Lecture - 3
+
+- Custom Tab Bar / Menu Bar
+
+### Programming Tricks
+
+- navigationBar 간에 line 없애기
+
+```swift
+// get rid of black bar underneath navbar
+UINavigationBar.appearance().shadowImage = UIImage()
+UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
+```
+
+⇒ 빈 이미지를 적용한다.
+
+ℹ️  Image에 rendering 모드 적용하기
+
+```swift
+UIImage(named: imageNames[indexPath.row])?.withRenderingMode(.alwaysTemplate)
+```
+
+⇒ 이렇게 해줘야 `tintColor` 등을 적용했을 때, 코드가 작동된다.
+
+ℹ️  Cell에 기본적으로 제공되는 변수
+
+```swift
+//When highlighted, change the color
+override var isHighlighted: Bool {
+    didSet {
+        imageView.tintColor = isHighlighted ? UIColor.white : UIColor.rgb(red: 91, green: 14, blue: 13)
+    }
+}
+
+//When selected, change the color
+override var isSelected: Bool {
+    didSet {
+        imageView.tintColor = isHighlighted ? UIColor.white : UIColor.rgb(red: 91, green: 14, blue: 13)
+    }
+}
+```
+
+# Menu Bar
+
+### Menu Bar Installation
+
+```swift
+override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        /* Navigation Controller Design */
+        navigationItem.title = "Home"
+        
+        navigationController?.navigationBar.isTranslucent = false
+        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width - 32, height: view.frame.height))
+        titleLabel.text = "Home"
+        titleLabel.textColor = UIColor.white
+        titleLabel.font = UIFont.systemFont(ofSize: 20)
+        navigationItem.titleView = titleLabel
+        collectionView.backgroundColor = UIColor.white
+    
+        
+        //Register Class Cell
+        /*
+         cell을 등록할 때
+         UINib을 등록하는 방법이랑,
+         class를 등록하는 방법이 있다.
+         */
+        collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
+        
+                /*** Menu Bar Installation ***/
+
+        /* Adjust Collection View Position */
+        collectionView.contentInset = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
+        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
+        
+        /* SetupMenuBar */
+        setupMenuBar()
+    }
+
+        /*** Menu Bar Installation ***/    
+    /* Create Menubar */
+    let menuBar: MenuBar = {
+        let mb = MenuBar()
+        return mb
+    }()
+
+        /*** Menu Bar Installation ***/    
+    private func setupMenuBar() {
+        view.addSubview(menuBar)
+        view.addConstraintsWithFormat(format: "H:|[v0]|", views: menuBar)
+        view.addConstraintsWithFormat(format: "V:|[v0(50)]", views: menuBar)
+    }
+```
+
+### Menu Bar
+
+```swift
+//
+//  MenuBar.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/06.
+//
+
+import UIKit
+
+class MenuBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+
+    //lazy var를 써야지 cv.dataSource, cv.delegate를 적용할 수 있다.
+    lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = UIColor.rgb(red: 230, green: 32, blue: 31)
+        cv.dataSource = self
+        cv.delegate = self
+        return cv
+    }()
+    
+    let cellId = "cellId"
+    
+    //나중에 component처럼 쓰고 싶다면 image name만 바꿔준다.
+    let imageNames = ["house.fill", "square.and.arrow.down.on.square.fill", "pencil.circle.fill", "arrow.up.bin.fill"]
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        collectionView.register(MenuCell.self, forCellWithReuseIdentifier: cellId)
+        
+        addSubview(collectionView)
+        addConstraintsWithFormat(format: "H:|[v0]|", views: collectionView)
+        addConstraintsWithFormat(format: "V:|[v0]|", views: collectionView)
+        
+        /* 맨 처음 화면이 rendering 됬을 때 선택된 부분을 보여주기 */
+        let selectedIndexPath = IndexPath(item: 0, section: 0)
+        collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: .centeredHorizontally)
+        
+    }
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 4
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! MenuCell
+        cell.imageView.image = UIImage(systemName: imageNames[indexPath.row])
+        cell.tintColor = UIColor.rgb(red: 91, green: 14, blue: 13)
+        /** Component **/
+        //component로 만들 때는 아래 주석을 풀어주자
+//        cell.imageView.image = UIImage(named: imageNames[indexPath.row])?.withRenderingMode(.alwaysTemplate)
+        
+        return cell
+    }
+    
+    //각각의 메뉴의 크기를 정해줌.
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: frame.width / 4, height: frame.height)
+    }
+    
+    //각각 사이의 spacing을 제거해준다.
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+}
+
+class MenuCell: BaseCell {
+    
+    let imageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(systemName: "house.fill")
+        /** Component **/
+        //component로 만들 때는 아래 주석을 풀어주자
+//        iv.image = UIImage(named: "home")?.withRenderingMode(.alwaysTemplate)
+        iv.tintColor = UIColor.rgb(red: 91, green: 14, blue: 13)
+        return iv
+    }()
+    
+    //When highlighted, change the color
+    override var isHighlighted: Bool {
+        didSet {
+            imageView.tintColor = isHighlighted ? UIColor.white : UIColor.rgb(red: 91, green: 14, blue: 13)
+        }
+    }
+    
+    //When selected, change the color
+    override var isSelected: Bool {
+        didSet {
+            imageView.tintColor = isSelected ? UIColor.white : UIColor.rgb(red: 91, green: 14, blue: 13)
+        }
+    }
+    
+    override func setupViews() {
+        super.setupViews()
+        addSubview(imageView)
+        addConstraintsWithFormat(format: "H:[v0(28)]", views: imageView)
+        addConstraintsWithFormat(format: "V:[v0(28)]", views: imageView)
+        addConstraint(NSLayoutConstraint(item: imageView, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1, constant: 0))
+        addConstraint(NSLayoutConstraint(item: imageView, attribute: .centerY, relatedBy: .equal, toItem: self, attribute: .centerY, multiplier: 1, constant: 0))
+    }
+    
+}
+
+/** Component **/
+//나중에 MenuBar을 component처럼 사용하고 싶다면... 아래 코드의 주석을 풀어준다.
+//extension UIView {
+//
+//    //parameter에 여러 object 넣을 수 있는 함수 만들기
+//    func addConstraintsWithFormat(format: String, views: UIView...) {
+//
+//        var viewsDictionary = [String: UIView]()
+//        for (index, view) in views.enumerated() {
+//            let key = "v\(index)"
+//            view.translatesAutoresizingMaskIntoConstraints = false
+//            viewsDictionary[key] = view
+//        }
+//
+//        addConstraints(
+//            //V:|-16-[v0]-16-|   =>   Vertically, top, bottom 0 contstant for each
+//            NSLayoutConstraint.constraints(withVisualFormat: format, // v0(1) => One pixel Tall
+//                                           options: NSLayoutConstraint.FormatOptions(),
+//                                           metrics: nil,
+//                                           views: viewsDictionary)
+//        )
+//    }
+//
+//}
+```

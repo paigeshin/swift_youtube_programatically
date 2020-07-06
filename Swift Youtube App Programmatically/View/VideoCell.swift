@@ -7,12 +7,25 @@
 
 import UIKit
 
-class VideoCell: UICollectionViewCell {
+class BaseCell: UICollectionViewCell {
     
+    //Cell을 만들 때, 따로 UINib을 생성하지 않았다면 반드시 호출해야 한다.
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
     }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setupViews() {
+        
+    }
+}
+
+
+class VideoCell: BaseCell {
     
     let thumnailImageView: UIImageView = {
         let imageView = UIImageView()
@@ -56,7 +69,9 @@ class VideoCell: UICollectionViewCell {
         return textView
     }()
     
-    func setupViews() {
+    override func setupViews() {
+        super.setupViews()
+        
         self.addSubview(thumnailImageView)
         self.addSubview(seperatorView)
         self.addSubview(userProfileImageView)
@@ -93,8 +108,6 @@ class VideoCell: UICollectionViewCell {
         self.addConstraint(NSLayoutConstraint(item: subtitleTextView, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 20))
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+
     
 }
