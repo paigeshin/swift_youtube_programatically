@@ -987,3 +987,123 @@ if let channelName = video?.channel?.name, let numberOfViews = video?.numberOfVi
       }
   }
 ```
+# Lecture 5
+
+[https://www.youtube.com/watch?v=WjrvcGAZfoI&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=5](https://www.youtube.com/watch?v=WjrvcGAZfoI&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=5)
+
+# REST JSON Integration via `NSURLSession`
+
+### String 형식으로 데이터 받아오는 방법
+
+```swift
+let url: URL? = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/home.json")
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error)
+                return
+            }
+            //String 형식으로 서버 response 받아오는 방법
+                        let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
+                        print(str)
+              }.resume()
+```
+
+### SwiftyJSON처럼 json 데이터 가져오는 방법
+
+```swift
+let url: URL? = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/home.json")
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            
+            do {
+                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
+                
+                self.videos = [Video]()
+                
+                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                for dictionary in json as! [[String: AnyObject]] {
+                    let video = Video()
+                    video.title = dictionary["title"] as? String
+                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
+                    self.videos?.append(video)
+                }
+                
+            } catch let jsonError {
+                print(jsonError)
+            }
+        
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+            }
+            
+            //String 형식으로 서버 response 받아오는 방법
+//            let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
+//            print(str)
+            
+        }.resume()
+```
+
+ℹ️   Optional Count Handling 하는 방법
+
+```swift
+override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    if let count = videos?.count {
+        return count
+    }
+    return 0
+}
+
+//또는...
+override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return videos?.count ?? 0
+}
+```
+
+### URL을 통해서 Image 가져오는 방법
+
+```swift
+func setupThumbnailImage() {
+    if let thumbnailImageUrl = video?.thumbnailImageName {
+        
+        let url = URL(string: thumbnailImageUrl)
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            
+            if error != nil {
+                print(error?.localizedDescription)
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.thumnailImageView.image = UIImage(data: data!)
+            }
+            
+        }.resume()
+        
+        print(thumbnailImageUrl)
+    }
+}
+```
+
+```swift
+extension UIImageView {
+    
+    func loadImageUsingUrlString(urlString: String){
+        let url = URL(string: urlString)
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error?.localizedDescription)
+                return
+            }
+            DispatchQueue.main.async {
+                self.image = UIImage(data: data!)
+            }
+        }.resume()
+    }
+    
+}
+```

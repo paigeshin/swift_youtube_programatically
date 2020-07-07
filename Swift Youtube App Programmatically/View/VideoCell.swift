@@ -30,13 +30,12 @@ class VideoCell: BaseCell {
     var video: Video? {
         didSet {
             titleLabel.text = video?.title
+            
             //handling characters outside of bounds
-            thumnailImageView.image = UIImage(named: (video?.thumbnailImageName)!)
-            
-            if let profileImageName = video?.channel?.profileImagename {
-                userProfileImageView.image = UIImage(named: profileImageName)
-            }
-            
+            setupThumbnailImage()
+            setupProfileImage()
+//            thumnailImageView.image = UIImage(named: (video?.thumbnailImageName)!)
+        
             if let channelName = video?.channel?.name, let numberOfViews = video?.numberOfViews {
                 let numberFormatter = NumberFormatter()
                 numberFormatter.numberStyle = .decimal
@@ -70,6 +69,18 @@ class VideoCell: BaseCell {
         }
     }
     
+    func setupThumbnailImage() {
+        if let thumbnailImageUrl = video?.thumbnailImageName {
+            thumnailImageView.loadImageUsingUrlString(urlString: thumbnailImageUrl)
+        }
+    }
+    
+    func setupProfileImage() {
+        if let profileImageUrl = video?.channel?.profileImagename {
+            userProfileImageView.loadImageUsingUrlString(urlString: profileImageUrl)
+        }
+    }
+    
     let thumnailImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "thumbnail")!
@@ -85,6 +96,7 @@ class VideoCell: BaseCell {
         imageView.layer.cornerRadius = 22
         imageView.layer.masksToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFill
         return imageView
     }()
     
@@ -157,7 +169,5 @@ class VideoCell: BaseCell {
         //height constraint
         self.addConstraint(NSLayoutConstraint(item: subtitleTextView, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 30))
     }
-    
-
     
 }

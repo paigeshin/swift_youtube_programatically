@@ -44,8 +44,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         //해당하는 것을 작동시키려면 Info.plist에 `View controller-based status bar appearance - NO`를 추가해줘야 한다.
         
-        
-        
         guard let _ = (scene as? UIWindowScene) else { return }
     }
 
@@ -76,7 +74,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
 
 }
 
