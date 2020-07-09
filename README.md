@@ -1918,3 +1918,184 @@ lazy var settingsLauncher: SettingsLauncher = {
   
 }
 ```
+
+# Lecture - 10 
+
+# How to Use Enumerations to Prevent Bugs
+
+### Enumeration
+
+- An enumeration defines a common type for a group of related values and enables you to work with those values in a `type-safe way` within your code.
+
+### text enum example
+
+```swift
+label.textAlignment = .left //Swift enum example
+```
+
+### Enum 적용
+
+```swift
+enum SettingName: String {
+    case Cancel = "Cancel"
+    case Setting = "Setting"
+    case TermsPrivacy = "Terms & Privacy"
+    case SendFeedback = "Send Feedback"
+    case Help = "Help"
+    case SwitchAccount = "Swift Account"   
+}
+
+class Setting: NSObject {
+    
+    let name: SettingName
+    let imageName: String
+    
+    init(name: SettingName, imageName: String) {
+        self.name = name
+        self.imageName = imageName
+    }
+    
+}
+
+let settings: [Setting] = {
+        let settingSettings = Setting(name: .Setting, imageName: "square.and.arrow.up")
+        let termsAndPrivacySettings = Setting(name: .TermsPrivacy, imageName: "square.and.arrow.down")
+        let sendFeedbackSettings = Setting(name: .SendFeedback, imageName: "speaker.zzz")
+        let helpSettings = Setting(name: .Help, imageName: "cloud.sun.rain")
+        let switchAccount = Setting(name: .SwitchAccount, imageName: "square.and.arrow.up")
+        let cancelSettings = Setting(name: .Cancel, imageName: "xmark.seal")
+        return [
+            settingSettings,
+            termsAndPrivacySettings,
+            sendFeedbackSettings,
+            helpSettings,
+            switchAccount,
+            cancelSettings
+        ]
+    }()
+```
+# Lecture - 11
+
+[https://www.youtube.com/watch?v=XgRbj4YeG9I&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=11](https://www.youtube.com/watch?v=XgRbj4YeG9I&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=11)
+
+# Swipe Away Navigation Bar, Menu Bar Slider Animation
+
+ℹ️  `hidesBarOnSwipe` , one of animations for Navigation Bar 
+
+```swift
+/* navigation controller option */
+navigationController?.hidesBarsOnSwipe = true
+```
+
+### Horizontal Scroll Bar를 만들고 움직이게 하는 방법, 잘 적용하면 어떤 화면에서도 써먹을 수 있음.
+
+```swift
+//horizontal scrolling bar 설치
+func setupHorizontalBar() {
+    
+    //top menu bar에서 왼쪽, 오른쪽으로 움직이는 것을 표현.
+    let horizontalBarView = UIView()
+    horizontalBarView.translatesAutoresizingMaskIntoConstraints = false
+    horizontalBarView.backgroundColor = UIColor(white: 0.9, alpha: 1) //투명 white background 만들기
+    addSubview(horizontalBarView)
+    
+    //old school frame way of doing things
+//        horizontalBarView.frame = CGRect(x: <#T##CGFloat#>, y: <#T##CGFloat#>, width: <#T##CGFloat#>, height: <#T##CGFloat#>)
+
+    //new school way of laying out our views
+    //in iOS 9
+    //need x, y, width, height constraints
+    horizontalBarLeftAnchorConstraint = horizontalBarView.leftAnchor.constraint(equalTo: self.leftAnchor)
+    horizontalBarLeftAnchorConstraint?.isActive = true
+    horizontalBarView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
+    horizontalBarView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.25).isActive = true
+    horizontalBarView.heightAnchor.constraint(equalToConstant: 8).isActive = true 
+}
+
+func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        print(indexPath.row)
+        let x = CGFloat(indexPath.row) * frame.width / 4
+        horizontalBarLeftAnchorConstraint?.constant = x
+        
+        //Apply SpringWithDamping Animation for natural rendering
+        UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+            UIView.animate(withDuration: 0.75) {
+                self.layoutIfNeeded()
+            }
+        }, completion: nil)
+        
+
+}
+```
+
+### Create SingleTon API Service
+
+```swift
+//
+//  ApiService.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/09.
+//
+
+import UIKit
+
+class ApiService: NSObject {
+
+    static let sharedInstance = ApiService()
+    
+    func fetchVideos(completion: @escaping([Video]) -> ()) {
+        let url: URL? = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/home.json")
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            
+            do {
+                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
+                var videos = [Video]()
+                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                for dictionary in json as! [[String: AnyObject]] {
+                    let video = Video()
+                    video.title = dictionary["title"] as? String
+                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
+                    let channelDictionary = dictionary["channel"] as! [String: AnyObject]
+                    let channel = Channel()
+                    channel.name = channelDictionary["name"] as? String
+                    channel.profileImagename = channelDictionary["profile_image_name"] as? String
+                    video.channel = channel
+                    videos.append(video)
+                }
+                
+                DispatchQueue.main.async {
+                    completion(videos)
+                }
+                
+            } catch let jsonError {
+                print(jsonError)
+            }
+            
+
+            
+            //String 형식으로 서버 response 받아오는 방법
+//            let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
+//            print(str)
+        }.resume()
+    }
+    
+}
+```
+
+ℹ️  Closure의 parameter에 data type 지정해주기
+
+```swift
+func fetchVideos() {
+    ApiService.sharedInstance.fetchVideos { (videos: [Video]) in
+        self.videos = videos
+                self.collectionView.reloadData()
+    }
+}
+```

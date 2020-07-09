@@ -37,6 +37,46 @@ class MenuBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UIC
         let selectedIndexPath = IndexPath(item: 0, section: 0)
         collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: .centeredHorizontally)
         
+        setupHorizontalBar()
+    }
+    
+    var horizontalBarLeftAnchorConstraint: NSLayoutConstraint?
+    
+    //horizontal scrolling bar 설치
+    func setupHorizontalBar() {
+        
+        //top menu bar에서 왼쪽, 오른쪽으로 움직이는 것을 표현.
+        let horizontalBarView = UIView()
+        horizontalBarView.translatesAutoresizingMaskIntoConstraints = false
+        horizontalBarView.backgroundColor = UIColor(white: 0.9, alpha: 1) //투명 white background 만들기
+        addSubview(horizontalBarView)
+        
+        //old school frame way of doing things
+//        horizontalBarView.frame = CGRect(x: <#T##CGFloat#>, y: <#T##CGFloat#>, width: <#T##CGFloat#>, height: <#T##CGFloat#>)
+    
+        //new school way of laying out our views
+        //in iOS 9
+        //need x, y, width, height constraints
+        horizontalBarLeftAnchorConstraint = horizontalBarView.leftAnchor.constraint(equalTo: self.leftAnchor)
+        horizontalBarLeftAnchorConstraint?.isActive = true
+        horizontalBarView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
+        horizontalBarView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.25).isActive = true
+        horizontalBarView.heightAnchor.constraint(equalToConstant: 8).isActive = true 
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        print(indexPath.row)
+        let x = CGFloat(indexPath.row) * frame.width / 4
+        horizontalBarLeftAnchorConstraint?.constant = x
+        
+        //Apply SpringWithDamping Animation for natural rendering
+        UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+            UIView.animate(withDuration: 0.75) {
+                self.layoutIfNeeded()
+            }
+        }, completion: nil)
+        
+
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {

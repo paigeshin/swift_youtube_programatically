@@ -12,42 +12,10 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     var videos: [Video]?
     
     func fetchVideos() {
-        let url: URL? = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/home.json")
-        URLSession.shared.dataTask(with: url!) { (data, response, error) in
-            
-            if error != nil {
-                print(error!.localizedDescription)
-                return
-            }
-            
-            do {
-                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
-                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
-                self.videos = [Video]()
-                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
-                for dictionary in json as! [[String: AnyObject]] {
-                    let video = Video()
-                    video.title = dictionary["title"] as? String
-                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
-                    let channelDictionary = dictionary["channel"] as! [String: AnyObject]
-                    let channel = Channel()
-                    channel.name = channelDictionary["name"] as? String
-                    channel.profileImagename = channelDictionary["profile_image_name"] as? String
-                    video.channel = channel
-                    self.videos?.append(video)
-                }
-            } catch let jsonError {
-                print(jsonError)
-            }
-            
-            DispatchQueue.main.async {
-                self.collectionView.reloadData()
-            }
-            
-            //String 형식으로 서버 response 받아오는 방법
-//            let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
-//            print(str)
-        }.resume()
+        ApiService.sharedInstance.fetchVideos { (videos: [Video]) in
+            self.videos = videos
+            self.collectionView.reloadData()
+        }
     }
     
     override func viewDidLoad() {
@@ -57,11 +25,11 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         fetchVideos()
         
         /* Navigation Controller Design */
-        navigationItem.title = "Home"
+//        navigationItem.title = "Home"
         
         navigationController?.navigationBar.isTranslucent = false
         let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width - 32, height: view.frame.height))
-        titleLabel.text = "Home"
+        titleLabel.text = "  Home"
         titleLabel.textColor = UIColor.white
         titleLabel.font = UIFont.systemFont(ofSize: 20)
         navigationItem.titleView = titleLabel
@@ -117,9 +85,6 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     @objc func handleMore() {
         //show menu
         settingsLauncher.showSettings()
-        
-//        showControllerForSettings()
-        
     }
     
     /** Handle Event - Show ViewController For Settings Using navigation Controller **/
@@ -141,39 +106,63 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     }()
     
     private func setupMenuBar() {
+        
+        /* navigation controller option */
+        navigationController?.hidesBarsOnSwipe = true
+        
+        /**
+            navigationController?.hidesBarsOnSwipe = true
+            원래 menuBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true, 이 코드를 적용하면
+            menuBar를 제외한 navigation Controller가 hide 된다. 그 때, 중간에 비어있는 gap이 생기는데,  redView는 이 gap을 없애주려고 적용하는 코드다.
+         
+         **/
+        let redView = UIView()
+        redView.backgroundColor = UIColor.rgb(red: 230, green: 32, blue: 31)
+        view.addSubview(redView)
+        view.addConstraintsWithFormat(format: "H:|[v0]|", views: redView)
+        view.addConstraintsWithFormat(format: "V:[v0(50)]", views: redView)
+        
         view.addSubview(menuBar)
         view.addConstraintsWithFormat(format: "H:|[v0]|", views: menuBar)
         view.addConstraintsWithFormat(format: "V:|[v0(50)]", views: menuBar)
+        
+        /** ios 13에서는 아래 코드가 작동하지 않는다. **/
+        //아래와 같이 처리해주면, menuBar는 `navigationController.hidesBarsOnSwipe`를 true를 주더라도 사라지지 않고 무조건 safearea의 아래에 걸린다.
+//        menuBar.topAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        
     }
 
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return videos?.count ?? 0
-    }
     
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        //Register Cell
-        let cell: VideoCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! VideoCell
-        cell.video = videos![indexPath.row]
-        return cell
-    }
     
-    //각각의 cell container의 크기
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        //16:9
-        let leftSideContstant: CGFloat = 16
-        let rightSideConstant: CGFloat = 16
-        let ratio: CGFloat = 9 / 16
-        let height: CGFloat = (view.frame.width - leftSideContstant - rightSideConstant) * ratio
-        //16:9 thumnail을 만들기 위해서, height의 크기를 다른 contraint constant만큼 더해준다.
-        return CGSize(width: view.frame.width, height: height + 16 + 88)
-//        return CGSize(width: view.frame.width, height: 900)
-//        return CGSize(width: view.frame.width, height: 500)
-    }
-    
-    //각각 줄 간의 spacing
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
-    }
+//    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+//        return videos?.count ?? 0
+//    }
+//
+//    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+//        //Register Cell
+//        let cell: VideoCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! VideoCell
+//        cell.video = videos![indexPath.row]
+//        return cell
+//    }
+//
+//    //각각의 cell container의 크기
+//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+//        //16:9
+//        let leftSideContstant: CGFloat = 16
+//        let rightSideConstant: CGFloat = 16
+//        let ratio: CGFloat = 9 / 16
+//        let height: CGFloat = (view.frame.width - leftSideContstant - rightSideConstant) * ratio
+//        //16:9 thumnail을 만들기 위해서, height의 크기를 다른 contraint constant만큼 더해준다.
+//        return CGSize(width: view.frame.width, height: height + 16 + 88)
+////        return CGSize(width: view.frame.width, height: 900)
+////        return CGSize(width: view.frame.width, height: 500)
+//    }
+//
+//    //각각 줄 간의 spacing
+//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+//        return 0
+//    }
     
 }
 
