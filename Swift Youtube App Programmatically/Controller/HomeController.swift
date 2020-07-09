@@ -11,6 +11,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     var videos: [Video]?
     
+    let cellId = "cellId"
+    
     func fetchVideos() {
         ApiService.sharedInstance.fetchVideos { (videos: [Video]) in
             self.videos = videos
@@ -35,6 +37,23 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         navigationItem.titleView = titleLabel
         collectionView.backgroundColor = UIColor.white
     
+        /* Set up CollectionView */
+        setupCollectionView()
+        
+        /* Set up MenuBar */
+        setupMenuBar()
+        
+        /* Set up Navbar buttons */
+        setupNavBarButtons()
+    }
+    
+    func setupCollectionView() {
+        
+        //menubar 각각 다른화면 rendering 해주기, horizontal scrolling
+        if let flowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+            flowLayout.scrollDirection = .horizontal
+            flowLayout.minimumLineSpacing = 0
+        }
         
         //Register Class Cell
         /*
@@ -42,7 +61,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
          UINib을 등록하는 방법이랑,
          class를 등록하는 방법이 있다.
          */
-        collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
+//        collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
         
         /* Adjust Collection View Position */
         // top에 만큼의 값을줌.
@@ -50,11 +70,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         // top에 만큼의 값을줌.
         collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
         
-        /* SetupMenuBar */
-        setupMenuBar()
+        collectionView.isPagingEnabled = true
         
-        /* Set up Navbar buttons */
-        setupNavBarButtons()
     }
     
     /* Set up Navbar buttons */
@@ -73,7 +90,13 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     
     @objc func handleSearch() {
-        print(123)
+        
+    }
+    
+    //collectionView의 아이콘, 즉 custom tabbar icon을 클릭했을 시에 스크롤하게 한다.
+    func scrollToMenuIndex(menuIndex: Int) {
+        let indexPath = IndexPath(item: menuIndex, section: 0)
+        collectionView.scrollToItem(at: indexPath, at: .right, animated: true)
     }
     
     lazy var settingsLauncher: SettingsLauncher = {
@@ -100,8 +123,9 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     
     /* Create Menubar */
-    let menuBar: MenuBar = {
+    lazy var menuBar: MenuBar = {
         let mb = MenuBar()
+        mb.homeController = self
         return mb
     }()
     
@@ -129,11 +153,38 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         /** ios 13에서는 아래 코드가 작동하지 않는다. **/
         //아래와 같이 처리해주면, menuBar는 `navigationController.hidesBarsOnSwipe`를 true를 주더라도 사라지지 않고 무조건 safearea의 아래에 걸린다.
 //        menuBar.topAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        
-        
+    }
+    
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        //menubar control
+        //menubar의 slidebar가 움직일 수 있도록함.
+        //menuBar에 왼쪽 constraint가 잡혀있음. 그 값을 scrollView.content.x의 값을 넣으면 scroll할 때도 움직일 수 있도록 바꿀 수 있다.
+        menuBar.horizontalBarLeftAnchorConstraint?.constant = scrollView.contentOffset.x / 4
     }
 
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 4
+    }
     
+    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
+        
+        let colors: [UIColor] = [.blue, .gray, .green, .cyan]
+        
+        cell.backgroundColor = colors[indexPath.row]
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: view.frame.width, height: view.frame.height)
+    }
+    
+    //Synchronization when user scrolled, scrolling시 아이콘이 선택이 안되는데 아이콘 포지션을 잘 맞춰준다.
+    override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        let index = targetContentOffset.pointee.x / view.frame.width
+        let indexPath = IndexPath(item: Int(index), section: 0)
+        menuBar.collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+    }
     
 //    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
 //        return videos?.count ?? 0

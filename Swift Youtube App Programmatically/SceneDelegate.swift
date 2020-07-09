@@ -22,6 +22,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         
         let layout = UICollectionViewFlowLayout()
+        /* collectionView scroll Direction 적용해주기 */
+//        layout.scrollDirection = .horizontal
         window?.rootViewController = UINavigationController(rootViewController: HomeController(collectionViewLayout: layout))
         
         /* Navigation Controller Design */

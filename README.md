@@ -2099,3 +2099,65 @@ func fetchVideos() {
     }
 }
 ```
+
+# Lecture 12
+
+### ❓ From within a ScrollView, how do we know where the scroll location is? ❓
+
+```swift
+override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        //menubar control
+        //menubar의 slidebar가 움직일 수 있도록함.
+        //menuBar에 왼쪽 constraint가 잡혀있음. 그 값을 scrollView.content.x의 값을 넣으면 scroll할 때도 움직일 수 있도록 바꿀 수 있다.
+        menuBar.horizontalBarLeftAnchorConstraint?.constant = scrollView.contentOffset.x / 4
+    }
+```
+
+### Sync with Screen
+
+- HomeController.swift
+
+```swift
+/* Create Menubar */
+lazy var menuBar: MenuBar = {
+    let mb = MenuBar()
+    mb.homeController = self
+    return mb
+}()
+
+//collectionView의 아이콘, 즉 custom tabbar icon을 클릭했을 시에 스크롤하게 한다.
+func scrollToMenuIndex(menuIndex: Int) {
+    let indexPath = IndexPath(item: menuIndex, section: 0)
+    collectionView.scrollToItem(at: indexPath, at: .right, animated: true)
+}
+
+//Synchronization when user scrolled, scrolling시 아이콘이 선택이 안되는데 아이콘 포지션을 잘 맞춰준다.
+override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    let index = targetContentOffset.pointee.x / view.frame.width
+    let indexPath = IndexPath(item: Int(index), section: 0)
+    menuBar.collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+}
+```
+
+⇒ 이런 방식을 사용하게 되면 굳이 delegate protocol을 사용하지 않아도 되게됨.
+
+- MenuBar.swift
+
+```swift
+func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        print(indexPath.row)
+//        let x = CGFloat(indexPath.row) * frame.width / 4
+//        horizontalBarLeftAnchorConstraint?.constant = x
+        
+        //Apply SpringWithDamping Animation for natural rendering
+//        UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+//            UIView.animate(withDuration: 0.75) {
+//                self.layoutIfNeeded()
+//            }
+//        }, completion: nil)
+        
+        /** 이부분이 중요하다 **/
+                /** 윗 부분 애니메이션 부분이 주석처리된 이유는 homeController에서 scrollToPosition을 사용해줬기 때문이다. **/
+        homeController?.scrollToMenuIndex(menuIndex: indexPath.row)
+    }
+```

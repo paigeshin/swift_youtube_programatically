@@ -43,7 +43,7 @@ class SettingsLauncher: NSObject, UICollectionViewDelegate, UICollectionViewData
 //        layout.itemSize = CGSize(width: 30, height: 30)
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .white
-        cv.collectionViewLayout.invalidateLayout()
+//        cv.collectionViewLayout.invalidateLayout()
         cv.isScrollEnabled = false 
         return cv
     }()

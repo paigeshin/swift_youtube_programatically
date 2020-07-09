@@ -21,6 +21,8 @@ class MenuBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UIC
     
     let cellId = "cellId"
     
+    var homeController: HomeController?
+    
     //나중에 component처럼 쓰고 싶다면 image name만 바꿔준다.
     let imageNames = ["house.fill", "square.and.arrow.down.on.square.fill", "pencil.circle.fill", "arrow.up.bin.fill"]
     
@@ -66,17 +68,18 @@ class MenuBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UIC
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         print(indexPath.row)
-        let x = CGFloat(indexPath.row) * frame.width / 4
-        horizontalBarLeftAnchorConstraint?.constant = x
+//        let x = CGFloat(indexPath.row) * frame.width / 4
+//        horizontalBarLeftAnchorConstraint?.constant = x
         
         //Apply SpringWithDamping Animation for natural rendering
-        UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
-            UIView.animate(withDuration: 0.75) {
-                self.layoutIfNeeded()
-            }
-        }, completion: nil)
+//        UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+//            UIView.animate(withDuration: 0.75) {
+//                self.layoutIfNeeded()
+//            }
+//        }, completion: nil)
         
-
+        
+        homeController?.scrollToMenuIndex(menuIndex: indexPath.row)
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
