@@ -10,13 +10,24 @@ import UIKit
 /** Component화 한다면 바꿔줘야하는 것들 **/
 class Setting: NSObject {
     
-    let name: String
+    let name: SettingName
     let imageName: String
     
-    init(name: String, imageName: String) {
+    init(name: SettingName, imageName: String) {
         self.name = name
         self.imageName = imageName
     }
+    
+}
+
+//하나의 데이터타입.
+enum SettingName: String {
+    case Cancel = "Cancel & Dismiss"
+    case Setting = "Setting"
+    case TermsPrivacy = "Terms & Privacy"
+    case SendFeedback = "Send Feedback"
+    case Help = "Help"
+    case SwitchAccount = "Swift Account"
     
 }
 
@@ -48,13 +59,19 @@ class SettingsLauncher: NSObject, UICollectionViewDelegate, UICollectionViewData
     /** Component화 한다면 바꿔줘야하는 것들 **/
     /* Set Menu Items */
     let settings: [Setting] = {
+        let settingSettings = Setting(name: .Setting, imageName: "square.and.arrow.up")
+        let termsAndPrivacySettings = Setting(name: .TermsPrivacy, imageName: "square.and.arrow.down")
+        let sendFeedbackSettings = Setting(name: .SendFeedback, imageName: "speaker.zzz")
+        let helpSettings = Setting(name: .Help, imageName: "cloud.sun.rain")
+        let switchAccount = Setting(name: .SwitchAccount, imageName: "square.and.arrow.up")
+        let cancelSettings = Setting(name: .Cancel, imageName: "xmark.seal")
         return [
-            Setting(name: "Settings", imageName: "square.and.arrow.up"),
-            Setting(name: "Terms & Privacy", imageName: "square.and.arrow.down"),
-            Setting(name: "Send Feedback", imageName: "speaker.zzz"),
-            Setting(name: "Help", imageName: "cloud.sun.rain"),
-            Setting(name: "Switch Account", imageName: "moon.fill"),
-            Setting(name: "Cancel", imageName: "xmark.seal")
+            settingSettings,
+            termsAndPrivacySettings,
+            sendFeedbackSettings,
+            helpSettings,
+            switchAccount,
+            cancelSettings
         ]
     }()
     
@@ -176,7 +193,7 @@ class SettingsLauncher: NSObject, UICollectionViewDelegate, UICollectionViewData
         }) { (completed) in
             /* Handle Menu when menu is clicked */
             let setting = self.settings[indexPath.row]
-            if setting.name != "Cancel" {
+            if setting.name != .Cancel {
                 self.homeController?.showControllerForSetting(setting: setting)
             }
         }
