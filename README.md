@@ -1107,3 +1107,814 @@ extension UIImageView {
     
 }
 ```
+
+# Lecture - 6
+
+[https://www.youtube.com/watch?v=XFvs6eraBXM&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=6](https://www.youtube.com/watch?v=XFvs6eraBXM&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=6)
+
+**ℹ️  DispatchQueue.main.async** 
+
+⇒ concurrent하게 돌다가 다시 main 으로 돌아와라, 라는 뜻임.
+
+```swift
+func loadImageUsingUrlString(urlString: String){
+        let url = URL(string: urlString)
+        //가장 처음에 로딩될 때, 해당되는 이미지가 로딩아 안되는 경우가 있어서 `nil`값을 줘서 제대로 출력되게 만든다.
+        image = nil
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error?.localizedDescription)
+                return
+            }
+            DispatchQueue.main.async {
+                self.image = UIImage(data: data!)
+            }
+        }.resume()
+    }
+```
+
+### Image Caching - Faster Loading
+
+```swift
+//Image Cache, 로딩한 이미지를 저장함. 나중에 더 빠르게 로딩하기 위해서다.
+
+let imageCache = NSCache<NSString, UIImage>()
+
+extension UIImageView {
+    
+    func loadImageUsingUrlString(urlString: String){
+        let url = URL(string: urlString)
+        //가장 처음에 로딩될 때, 해당되는 이미지가 로딩아 안되는 경우가 있어서 `nil`값을 줘서 제대로 출력되게 만든다.
+        image = nil
+        if let imageFromCache = imageCache.object(forKey: NSString(string:urlString)) {
+            self.image = imageFromCache
+            return
+        }
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error?.localizedDescription)
+                return
+            }
+            DispatchQueue.main.async {
+                let imageToCache = UIImage(data: data!)
+                imageCache.setObject(imageToCache!, forKey: NSString(string: urlString))
+                self.image = imageToCache
+            }
+        }.resume()
+    }
+    
+}
+```
+
+### Extension을 만드는 또 다른 방법
+
+- class 만들기, image Caching 및 correct position에 이미지 뿌려주기.
+
+```swift
+//Image Cache, 로딩한 이미지를 저장함. 나중에 더 빠르게 로딩하기 위해서다.
+
+let imageCache = NSCache<NSString, UIImage>()
+
+class CustomImageView: UIImageView {
+    
+    var imageUrlString: String?
+    
+    func loadImageUsingUrlString(urlString: String){
+        
+        imageUrlString = urlString
+        
+        let url = URL(string: urlString)
+        //가장 처음에 로딩될 때, 해당되는 이미지가 로딩아 안되는 경우가 있어서 `nil`값을 줘서 제대로 출력되게 만든다.
+        image = nil
+        if let imageFromCache = imageCache.object(forKey: NSString(string:urlString)) {
+            self.image = imageFromCache
+            return
+        }
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error?.localizedDescription)
+                return
+            }
+            DispatchQueue.main.async {
+                let imageToCache = UIImage(data: data!)
+                
+                //imageUrl string과 parameter로 들어온 urlString이 같은 값일때 로딩하게 하면, collectionView나 tableView 특성 때문에 이상하게 데이터가 출력되는 경우를 방지할 수 있다.
+                if self.imageUrlString == urlString {
+                    imageCache.setObject(imageToCache!, forKey: NSString(string: urlString))
+                }
+                
+                self.image = imageToCache
+            }
+        }.resume()
+    }
+    
+}
+```
+
+- 적용
+
+```swift
+let thumnailImageView: CustomImageView = {
+    let imageView = CustomImageView()
+    imageView.image = UIImage(named: "thumbnail")!
+    imageView.contentMode = .scaleAspectFill
+    imageView.clipsToBounds = true
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    return imageView
+}()
+
+let userProfileImageView: CustomImageView = {
+    let imageView = CustomImageView()
+    imageView.image = UIImage(named: "profile")!
+    imageView.layer.cornerRadius = 22
+    imageView.layer.masksToBounds = true
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    imageView.contentMode = .scaleAspectFill
+    return imageView
+}()
+```
+# Lecture - 7, 8, 9
+
+[https://www.youtube.com/watch?v=2kwCfFG5fDA&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=7](https://www.youtube.com/watch?v=2kwCfFG5fDA&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=7)
+
+[https://www.youtube.com/watch?v=PNmuTTd5zWc&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=8](https://www.youtube.com/watch?v=PNmuTTd5zWc&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=8)
+
+# Swift Slide-In Menu
+
+- Cover up entire screen
+
+```swift
+@objc func handleMore() {
+        //show menu
+        /*
+         'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+         => 즉, multiple scene을 support하지 않으면 써도 됨.
+         */
+        if let window = UIApplication.shared.keyWindow {
+            let blackView = UIView()
+            blackView.backgroundColor = UIColor.black
+            window.addSubview(blackView)
+            blackView.frame = window.frame
+        }
+    }
+```
+
+- Basic Code
+
+```swift
+@objc func handleMore() {
+        //show menu
+        /*
+         'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+         => 즉, multiple scene을 support하지 않으면 써도 됨.
+         */
+        if let window = UIApplication.shared.keyWindow {
+            
+            blackView.backgroundColor = UIColor(white: 0, alpha: 0.5)
+            
+            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
+            
+            window.addSubview(blackView)
+            //view.addSubview를 사용해도 된다.
+            blackView.frame = window.frame
+            blackView.alpha = 0
+            UIView.animate(withDuration: 0.5) {
+                self.blackView.alpha = 1
+            }
+        }
+    }
+    
+    @objc func handleDismiss() {
+        UIView.animate(withDuration: 0.5) {
+            self.blackView.alpha = 0
+        }
+    }
+```
+
+ℹ️  iOS 13에서 keywindow 집어오는 방법
+
+```swift
+//ios 13
+guard let window = UIApplication.shared.connectedScenes
+.filter({$0.activationState == .foregroundActive})
+.map({$0 as? UIWindowScene})
+.compactMap({$0})
+.first?.windows
+.filter({$0.isKeyWindow}).first
+else {
+        return
+}
+
+//ios less than 13 
+let window = UIApplication.shared.keyWindow
+```
+
+- keywindow ios 13버전
+
+```swift
+let blackView = UIView()
+
+@objc func handleMore() {
+        //show menu
+        /*
+         'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+         => 즉, multiple scene을 support하지 않으면 써도 됨.
+         */
+        guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+                return
+        }
+        
+//        if let window = UIApplication.shared.keyWindow {
+            
+            blackView.backgroundColor = UIColor(white: 0, alpha: 0.5)
+            
+            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
+            
+            window.addSubview(blackView)
+            //view.addSubview를 사용해도 된다.
+            blackView.frame = window.frame
+            blackView.alpha = 0
+            UIView.animate(withDuration: 0.5) {
+                self.blackView.alpha = 1
+            }
+//        }
+    }
+    
+    @objc func handleDismiss() {
+        UIView.animate(withDuration: 0.5) {
+            self.blackView.alpha = 0
+        }
+    }
+```
+
+### Component 화
+
+```swift
+//
+//  SettingLauncher.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/07.
+//
+
+import UIKit
+
+class SettingsLauncher: NSObject {
+    
+    override init() {
+        super.init()
+        //start doing something here...
+    }
+    
+    let blackView = UIView()
+    
+    @objc func showSettings() {
+        //show menu
+        /*
+         'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+         => 즉, multiple scene을 support하지 않으면 써도 됨.
+         */
+        guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+                return
+        }
+        
+//        if let window = UIApplication.shared.keyWindow {
+            
+            blackView.backgroundColor = UIColor(white: 0, alpha: 0.5)
+            
+            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
+            
+            window.addSubview(blackView)
+            //view.addSubview를 사용해도 된다.
+            blackView.frame = window.frame
+            blackView.alpha = 0
+            UIView.animate(withDuration: 0.5) {
+                self.blackView.alpha = 1
+            }
+//        }
+    }
+    
+    @objc func handleDismiss() {
+        UIView.animate(withDuration: 0.5) {
+            self.blackView.alpha = 0
+        }
+    }
+    
+}
+```
+
+- how to load component
+
+```swift
+let settingsLauncher = SettingsLauncher()
+
+@objc func handleMore() {
+    //show menu
+    settingsLauncher.showSettings()
+}
+```
+
+- apply spring damping animation
+
+```swift
+/* Set Contents, apply SpringWitnDamping */
+UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+    /* Set Contents, animation 추가 */
+    self.collectionView.frame = CGRect(x: 0, y: y, width: self.collectionView.frame.width, height: self.collectionView.frame.height)
+}, completion: nil)
+```
+
+# Add Animation & Rectangle to the component, complete code
+
+```swift
+//
+//  SettingLauncher.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/07.
+//
+
+import UIKit
+
+class SettingsLauncher: NSObject, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    let blackView = UIView()
+    
+      /* Set Contents */
+    let myCollectionView: UICollectionView = {
+         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
+         layout.sectionInset = UIEdgeInsets(top: 20, left: 10, bottom: 10, right: 10)
+         layout.itemSize = CGSize(width: 60, height: 60)
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .white
+        return cv
+    }()
+    
+    /* Set Menu Items */
+    let cellId = "settingCell"
+        
+    func showSettings() {
+    
+        //show menu
+        /*
+         'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+         => 즉, multiple scene을 support하지 않으면 써도 됨.
+         */
+//                let window = UIApplication.shared.keyWindow!
+        guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+                return
+        }
+        
+        blackView.backgroundColor = UIColor(white: 0, alpha: 0.5) //투명 background 값 주기
+        blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
+        
+        window.addSubview(blackView)
+        /* Set Contents, 실제 contents를 넣을 view를 그려주고 y 값을 지정해준다.. */
+        window.addSubview(collectionView)
+        
+        let height: CGFloat = 200
+        let y = window.frame.height - height
+        
+        /* Set Contents */
+        //initial value는 y값을 fullsize로 준다. 왜냐하면, animation을 주기 위해서다. 아래서 위로 올라오는 animation 만들기
+        collectionView.frame = CGRect(x: 0, y: window.frame.height, width: window.frame.width, height: height)
+        
+        blackView.frame = window.frame
+        blackView.alpha = 0
+        
+        /* Set Contents, apply SpringWitnDamping */
+        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+            self.blackView.alpha = 1
+            /* Set Contents, animation 추가 */
+            /* collectionView의 크기를 정해준다. */
+            self.collectionView.frame = CGRect(x: 0, y: y, width: self.collectionView.frame.width, height: height)
+        }) { (done) in
+            if done {
+                self.collectionView.reloadData()
+            }
+        }
+    }
+    
+    @objc func handleDismiss() {
+        
+        guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+                return
+        }
+        
+        UIView.animate(withDuration: 0.5) {
+            self.blackView.alpha = 0
+            /* Set Contents, set animation */
+            self.collectionView.frame = CGRect(x: 0, y: window.frame.height, width: self.collectionView.frame.width, height: self.collectionView.frame.height)
+        }
+        
+    }
+    
+    
+
+    /* Set Menu Items */
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print("returning items!")
+        return 3
+    }
+    
+    /* Set Menu Items */
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        print("cellForItemAt called!")
+//        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! SettingCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
+        print("populating cell!")
+        cell.backgroundColor = .black
+        return cell
+    }
+    
+    /* Set Menu Items */
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        print("CGSize called")
+        return CGSize(width: collectionView.frame.width, height: collectionView.frame.height)
+    }
+    
+    override init() {
+        super.init()
+
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(SettingCell.self, forCellWithReuseIdentifier: cellId)
+        
+//        addConstraintsWithFormat(format: "H:-16-[v0(30)]-8-[v1]|", views: iconImageView, nameLabel)
+//        addConstraintsWithFormat(format: "V:|[v0]|", views: nameLabel)
+//        addConstraintsWithFormat(format: "V:[v0(30)]", views: iconImageView)
+//        collectionView.addConstraintsWithFormat(format: "H:|[v0]|", views: collectionView)
+//        collectionView.addConstraintsWithFormat(format: "V:|[v0]|", views: collectionView)
+        
+    }
+    
+    
+
+}
+```
+
+# Add Setting Menu
+
+ℹ️  NSObject를 상속 받았을 경우, `protocol`  을 가져와서 쓸 수 있다.
+
+### Create UICollectionView Programmatically
+
+```swift
+/* Set Contents */
+let collectionView: UICollectionView = {
+    let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
+    layout.sectionInset = UIEdgeInsets(top: 20, left: 10, bottom: 10, right: 10)
+    layout.itemSize = CGSize(width: 60, height: 60)
+    let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    cv.backgroundColor = .white
+    return cv
+}()
+```
+
+- `UICollectionViewLayout()` 이 아니라 `UICollectionviewFlowLayout()` 을 넣어야한다.
+
+⇒ 이거때문에 거의 4시간 날림.
+
+### Complete
+
+- SettingCell.swift
+
+```swift
+//
+//  SettingCell.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/07.
+//
+
+import UIKit
+
+class SettingCell: BaseCell {
+    
+    override var isHighlighted: Bool {
+        didSet {
+            backgroundColor = isHighlighted ? UIColor.darkGray : UIColor.white
+            nameLabel.textColor = isHighlighted ? UIColor.white : UIColor.black
+            iconImageView.tintColor = isHighlighted ? UIColor.white : UIColor.darkGray
+        }
+    }
+    
+    var setting: Setting? {
+        didSet {
+            nameLabel.text = setting?.name
+            if let imageName = setting?.imageName {
+                iconImageView.image = UIImage(systemName: imageName)
+                iconImageView.tintColor = UIColor.darkGray
+            }
+        }
+    }
+    
+    let nameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Setting"
+        label.font = UIFont.systemFont(ofSize: 13)
+        return label
+    }()
+    
+    let iconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "folder.fill")
+        imageView.contentMode = .scaleAspectFill
+        return imageView
+    }()
+
+    override func setupViews() {
+        super.setupViews()
+        addSubview(nameLabel)
+        addSubview(iconImageView)
+        addConstraintsWithFormat(format: "H:|-16-[v0(30)]-16-[v1]|", views: iconImageView, nameLabel)
+        addConstraintsWithFormat(format: "V:|[v0]|", views: nameLabel)
+        addConstraintsWithFormat(format: "V:[v0(30)]", views: iconImageView)
+        
+        //center Y로 정렬하기
+        addConstraint(NSLayoutConstraint(
+            item: iconImageView,
+            attribute: .centerY,
+            relatedBy: .equal,
+            toItem: self,
+            attribute: .centerY,
+            multiplier: 1,
+            constant: 0))
+        
+    }
+    
+}
+```
+
+- SettingLauncher
+
+```swift
+//
+//  SettingLauncher.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/07.
+//
+
+import UIKit
+
+/** Component화 한다면 바꿔줘야하는 것들 **/
+class Setting: NSObject {
+    
+    let name: String
+    let imageName: String
+    
+    init(name: String, imageName: String) {
+        self.name = name
+        self.imageName = imageName
+    }
+    
+}
+
+class SettingsLauncher: NSObject, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    let blackView = UIView()
+    
+    /* Set Contents */
+    let collectionView: UICollectionView = {
+        let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
+        /* Constraint를 추가했으니 아래 값이 굳이 필요가 없다. */
+//        layout.sectionInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+//        layout.itemSize = CGSize(width: 30, height: 30)
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .white
+        cv.collectionViewLayout.invalidateLayout()
+        cv.isScrollEnabled = false 
+        return cv
+    }()
+    
+    /* Set Menu Items */
+    let cellId = "powerCell"
+    let cellHeight: CGFloat = 50
+        
+    /** Component화 한다면 바꿔줘야하는 것들 **/
+    /* Set Menu Items */
+    let settings: [Setting] = {
+        return [
+            Setting(name: "Settings", imageName: "square.and.arrow.up"),
+            Setting(name: "Terms & Privacy", imageName: "square.and.arrow.down"),
+            Setting(name: "Send Feedback", imageName: "speaker.zzz"),
+            Setting(name: "Help", imageName: "cloud.sun.rain"),
+            Setting(name: "Switch Account", imageName: "moon.fill"),
+            Setting(name: "Cancel", imageName: "xmark.seal")
+        ]
+    }()
+    
+    func showSettings() {
+    
+        //show menu
+        /*
+         'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+         => 즉, multiple scene을 support하지 않으면 써도 됨.
+         */
+//                let window = UIApplication.shared.keyWindow!
+        guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+            return
+        }
+        
+        blackView.backgroundColor = UIColor(white: 0, alpha: 0.5) //투명 background 값 주기
+        blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
+        
+        window.addSubview(blackView)
+        /* Set Contents, 실제 contents를 넣을 view를 그려주고 y 값을 지정해준다.. */
+        window.addSubview(collectionView)
+        
+        /** Set Menu Items **/
+        /* Make dynamic Height for Menu Height */
+        let height: CGFloat = CGFloat(settings.count) * cellHeight
+        
+        let y = window.frame.height - height
+        
+        /* Set Contents */
+        //initial value는 y값을 fullsize로 준다. 왜냐하면, animation을 주기 위해서다. 아래서 위로 올라오는 animation 만들기
+        collectionView.frame = CGRect(x: 0, y: window.frame.height, width: window.frame.width, height: height)
+        
+        blackView.frame = window.frame
+        blackView.alpha = 0
+        
+        /* Set Contents, apply SpringWitnDamping */
+        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+            self.blackView.alpha = 1
+            /* Set Contents, animation 추가 */
+            /* collectionView의 크기를 정해준다. */
+            self.collectionView.frame = CGRect(x: 0,
+                                               y: y,
+                                               width: self.collectionView.frame.width,
+                                               height: height)
+        }, completion: nil)
+    }
+    
+    @objc func handleDismiss() {
+        
+        guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+                return
+        }
+        
+        UIView.animate(withDuration: 0.5) {
+            self.blackView.alpha = 0
+            /* Set Contents, set animation */
+            self.collectionView.frame = CGRect(x: 0,
+                                               y: window.frame.height,
+                                               width: self.collectionView.frame.width,
+                                               height: self.collectionView.frame.height)
+        }
+        
+    }
+    /* Set Menu Items */
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return settings.count
+    }
+    
+    /* Set Menu Items */
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.frame.width, height: cellHeight)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+    
+
+    /* Set Menu Items */
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell: SettingCell = collectionView.dequeueReusableCell(withReuseIdentifier: "powerCell", for: indexPath) as! SettingCell
+        cell.setting = settings[indexPath.row]
+        return cell
+    }
+    
+    override init() {
+        super.init()
+        collectionView.register(SettingCell.self, forCellWithReuseIdentifier: "powerCell")
+        collectionView.delegate = self
+        collectionView.dataSource = self
+    }
+
+}
+```
+
+- apply
+
+```swift
+let settingsLauncher = SettingsLauncher()
+    
+@objc func handleMore() {
+    //show menu
+    settingsLauncher.showSettings()
+}
+```
+
+# Handle Click for menus
+
+[https://www.youtube.com/watch?v=DYsfAD01fYk&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=9](https://www.youtube.com/watch?v=DYsfAD01fYk&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=9)
+
+### What does it mean to `lazy` instantiate a variable in Swift?
+
+- Not executing the code until it is called
+- It only gets called once
+
+**ℹ️.  Navigation Controller programmatically**
+
+```swift
+let dummySettingsViewController = UIViewController()
+navigationController?.pushViewController(dummySettingsViewController, animated: true)
+```
+
+### Attach Events for navigation push
+
+- SettingsLauncher
+
+```swift
+var homeController: HomeController?
+
+/* Handle Events */
+func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    
+    guard let window = UIApplication.shared.connectedScenes
+        .filter({$0.activationState == .foregroundActive})
+        .map({$0 as? UIWindowScene})
+        .compactMap({$0})
+        .first?.windows
+        .filter({$0.isKeyWindow}).first
+        else {
+            return
+    }
+    
+    //SpringWithDamping
+    UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+        self.blackView.alpha = 0
+        /* Set Contents, set animation */
+        self.collectionView.frame = CGRect(x: 0,
+                                           y: window.frame.height,
+                                           width: self.collectionView.frame.width,
+                                           height: self.collectionView.frame.height)
+    }) { (completed) in
+        /* Handle Menu when menu is clicked */
+        let setting = self.settings[indexPath.row]
+        if setting.name != "Cancel" {
+                        //show Settings
+            self.homeController?.showControllerForSetting(setting: setting)
+        }
+    }
+
+}
+```
+
+- HomeController
+
+```swift
+//lazy var를 사용했기 때문에 딱 1번만 initialize 됨
+lazy var settingsLauncher: SettingsLauncher = {
+    let launcher = SettingsLauncher()
+    launcher.homeController = self
+    return launcher
+}()
+
+@objc func handleMore() {
+  //show menu
+  settingsLauncher.showSettings()
+  
+//        showControllerForSettings()
+  
+}
+```

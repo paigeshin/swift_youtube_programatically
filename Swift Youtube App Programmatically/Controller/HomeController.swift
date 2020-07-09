@@ -9,27 +9,6 @@ import UIKit
 
 class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     
-//    var videos: [Video] = {
-//
-//        var kanyeChannel = Channel()
-//        kanyeChannel.name = "KayneIsTheBestChannel"
-//        kanyeChannel.profileImagename = "profile"
-//
-//        var blankSpaceVideo = Video()
-//        blankSpaceVideo.title = "Taylor Swift - Blank Space"
-//        blankSpaceVideo.thumbnailImageName = "thumbnail"
-//        blankSpaceVideo.channel = kanyeChannel
-//        blankSpaceVideo.numberOfViews = 23048933
-//
-//        var badBloodVideo = Video()
-//        badBloodVideo.title = "Taylor Swift - Bad Blood featuing Kendrick Lamar"
-//        badBloodVideo.thumbnailImageName = "thumbnail"
-//        badBloodVideo.channel = kanyeChannel
-//        badBloodVideo.numberOfViews = 50435243
-//
-//        return [blankSpaceVideo, badBloodVideo]
-//    }()
-    
     var videos: [Video]?
     
     func fetchVideos() {
@@ -60,9 +39,11 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
             } catch let jsonError {
                 print(jsonError)
             }
+            
             DispatchQueue.main.async {
                 self.collectionView.reloadData()
             }
+            
             //String 형식으로 서버 response 받아오는 방법
 //            let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
 //            print(str)
@@ -96,7 +77,9 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
         
         /* Adjust Collection View Position */
+        // top에 만큼의 값을줌.
         collectionView.contentInset = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
+        // top에 만큼의 값을줌.
         collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
         
         /* SetupMenuBar */
@@ -117,16 +100,39 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         searchBarButton.tintColor = UIColor.white
         let moreButton = UIBarButtonItem(image: moreImage, style: .plain, target: self, action: #selector(handleMore))
         moreButton.tintColor = UIColor.white
-        navigationItem.rightBarButtonItems = [searchBarButton, moreButton]
+        navigationItem.rightBarButtonItems = [moreButton, searchBarButton]
     }
+    
     
     @objc func handleSearch() {
         print(123)
     }
     
+    lazy var settingsLauncher: SettingsLauncher = {
+        let launcher = SettingsLauncher()
+        launcher.homeController = self
+        return launcher
+    }()
+    
     @objc func handleMore() {
-        print(456)
+        //show menu
+        settingsLauncher.showSettings()
+        
+//        showControllerForSettings()
+        
     }
+    
+    /** Handle Event - Show ViewController For Settings Using navigation Controller **/
+    func showControllerForSetting(setting: Setting) {
+        /** Handle Event **/
+        let dummySettingsViewController = UIViewController()
+        dummySettingsViewController.view.backgroundColor = UIColor.white
+        dummySettingsViewController.navigationItem.title = setting.name
+        navigationController?.navigationBar.tintColor = UIColor.white
+        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        navigationController?.pushViewController(dummySettingsViewController, animated: true)
+    }
+    
     
     /* Create Menubar */
     let menuBar: MenuBar = {
@@ -168,7 +174,6 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 0
     }
-    
     
 }
 
