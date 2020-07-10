@@ -11,7 +11,11 @@ import UIKit
 
 class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     
+    /** Set Up Title **/
+    let titles = ["Home", "Trending", "Subscription", "Account"]
+    
     let cellId = "cellId"
+    let trendingCellId = "trendingCellId"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,7 +57,10 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
          */
 //        collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
 //        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
+        
+        /** Registering more than two cell requires different Cell Id **/
         collectionView.register(FeedCell.self, forCellWithReuseIdentifier: cellId)
+        collectionView.register(TrendingCell.self, forCellWithReuseIdentifier: trendingCellId)
         
         /* Adjust Collection View Position */
         // top에 만큼의 값을줌.
@@ -167,11 +174,18 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        let FIRST_SCENE = 0
+        let SECOND_SCENE = 1
+        let THIRD_SCENE = 2
+        let FOURTH_SCENE = 3
+        
+        if indexPath.row == SECOND_SCENE {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: trendingCellId, for: indexPath)
+            return cell
+        }
+
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
-        
-//        let colors: [UIColor] = [.blue, .gray, .green, .cyan]
-        
-//        cell.backgroundColor = colors[indexPath.row]
         return cell
     }
     
@@ -179,9 +193,6 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         /** feedCell의 화면이 살짝 바깥으로 나가서 최적화,   height: view.frame.height - 50 **/
         return CGSize(width: view.frame.width, height: view.frame.height - 50)
     }
-    
-    /** Set Up Title **/
-    let titles = ["Home", "Trending", "Subscription", "Account"]
     
     //Synchronization when user scrolled, scrolling시 아이콘이 선택이 안되는데 아이콘 포지션을 잘 맞춰준다.
     override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
