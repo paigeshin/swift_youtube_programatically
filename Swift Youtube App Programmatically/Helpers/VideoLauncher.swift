@@ -10,21 +10,100 @@ import AVFoundation
 
 class VideoPlayerView: UIView {
     
+    //video Container 안에 들어감
+    //activityIndicatorView
+    let activityIndicatorView: UIActivityIndicatorView = {
+        let aiv = UIActivityIndicatorView(style: .large)
+        aiv.translatesAutoresizingMaskIntoConstraints = false
+        aiv.startAnimating()
+        return aiv
+    }()
+    
+    //video Container 안에 들어감
+    lazy var pausePlayButton: UIButton = {
+        let button = UIButton(type: .system)
+        let image = UIImage(systemName: "pause")
+        button.setImage(image, for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = .white
+        //button is hidden by default
+        button.isHidden = true
+        
+        button.addTarget(self, action: #selector(handlePause), for: .touchUpInside)
+        return button
+    }()
+    
+    var isPlaying: Bool = false
+    
+    //video player button등을 담아줄 frame.
+    let controlsContainerView: UIView = {
+       let view = UIView()
+        view.backgroundColor = UIColor(white: 0, alpha: 1)
+        return view
+    }()
+    
+    //Clean Logic
+    @objc func handlePause() {
+        if isPlaying {
+            player?.pause()
+            pausePlayButton.setImage(UIImage(systemName: "play"), for: .normal)
+        } else {
+            player?.play()
+            pausePlayButton.setImage(UIImage(systemName: "pause"), for: .normal)
+        }
+        isPlaying = !isPlaying
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
-    
-        backgroundColor = .black
         
+        //set up video view
+        setupPlayerView()
+        
+        //set up container frame
+        //video player button등을 담아줄 frame
+        controlsContainerView.frame = self.frame
+        self.addSubview(controlsContainerView)
+        //set up activityIndicatorView
+        controlsContainerView.addSubview(activityIndicatorView)
+        activityIndicatorView.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        activityIndicatorView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        
+        controlsContainerView.addSubview(pausePlayButton)
+        pausePlayButton.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        pausePlayButton.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        pausePlayButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        pausePlayButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        self.backgroundColor = .black
+    }
+    
+    var player: AVPlayer?
+    
+    private func setupPlayerView() {
         let urlString = "https://www.radiantmediaplayer.com/media/big-buck-bunny-360p.mp4"
         if let url = URL(string: urlString) {
-            let player = AVPlayer(url: url)
+            player = AVPlayer(url: url)
             
             //Set Player Layer, playerLayer를 설정해주지 않으면, 절대 재생되지 않는다.
             let playerLayer = AVPlayerLayer(player: player)
             self.layer.addSublayer(playerLayer)
             playerLayer.frame = self.frame
             
-            player.play()
+            player?.play()
+            
+            /* Play가 시작됬는지 안됬는지 확인하기 */
+            player?.addObserver(self, forKeyPath: "currentItem.loadedTimeRanges", options: .new, context: nil)
+        }
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        //This is when the player is ready and rendering frames
+        if keyPath == "currentItem.loadedTimeRanges" {
+            activityIndicatorView.stopAnimating()
+            controlsContainerView.backgroundColor = .clear
+            pausePlayButton.isHidden = false //시작되면 버튼을 다시 보여주게 한다.
+            isPlaying = true
         }
     }
     
