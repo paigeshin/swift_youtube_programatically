@@ -28,29 +28,46 @@ class ApiService: NSObject {
     func fetchFeedForUrlString(urlString: String, completion: @escaping([Video]) -> ()) {
         let url: URL? = URL(string: urlString)
         URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            
+            print("requesting data to url: \(url!)")
             if error != nil {
                 print(error!.localizedDescription)
                 return
             }
+                        
             do {
-                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
-                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
-                var videos = [Video]()
-                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
-                for dictionary in json as! [[String: AnyObject]] {
-                    let video = Video()
-                    video.title = dictionary["title"] as? String
-                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
-                    let channelDictionary = dictionary["channel"] as! [String: AnyObject]
-                    let channel = Channel()
-                    channel.name = channelDictionary["name"] as? String
-                    channel.profileImagename = channelDictionary["profile_image_name"] as? String
-                    video.channel = channel
-                    videos.append(video)
+             
+                if let unwrappedData = data {
+                    /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                    if let jsonDictoinaries = try JSONSerialization.jsonObject(with: unwrappedData, options: .mutableContainers) as? [[String: Any]] {
+                        var videos = [Video]()
+                        //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                        for dictionary in jsonDictoinaries {
+                            let video = Video()
+                            video.title = dictionary["title"] as? String
+                            video.thumbnail_image_name = dictionary["thumbnail_image_name"] as? String
+                            video.number_of_views = dictionary["number_of_views"] as? NSNumber
+
+                            /* Use set values, model을 통해서 자동으로 mapping 시켜준다. */
+        //                    video.setValuesForKeys(dictionary)
+                            
+                            print("dictionary: \(dictionary)")
+
+                            let channelDictionary = dictionary["channel"] as! [String: AnyObject]
+                            let channel = Channel()
+        //                    channel.setValuesForKeys(channelDictionary)
+                            channel.name = channelDictionary["name"] as? String
+                            channel.profile_image_name = channelDictionary["profile_image_name"] as? String
+                            video.channel = channel
+                            videos.append(video)
+                        }
+                        DispatchQueue.main.async {
+                            completion(videos)
+                        }
+                    }
                 }
-                DispatchQueue.main.async {
-                    completion(videos)
-                }
+                
+
             } catch let jsonError {
                 print(jsonError)
             }
@@ -58,3 +75,4 @@ class ApiService: NSObject {
     }
     
 }
+

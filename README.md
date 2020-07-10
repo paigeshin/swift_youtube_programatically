@@ -2497,3 +2497,211 @@ class ApiService: NSObject {
     
 }
 ```
+# Lecture 15 - JSON Parse, deprecated
+
+[https://www.youtube.com/watch?v=11aHute59QQ&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=15](https://www.youtube.com/watch?v=11aHute59QQ&list=PL0dzCUj1L5JGKdVUtA5xds1zcyzsz7HLj&index=15)
+
+### setValuesForKeys
+
+```swift
+//
+//  Video.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/06.
+//
+
+import UIKit
+
+class Video: NSObject {
+    
+    var thumbnail_image_name: String?
+    var title: String?
+    var numberOfViews: NSNumber?
+    var uploadDate: NSDate?
+    
+    var channel: Channel?
+    
+    var num_likes: NSNumber?
+    
+}
+
+class Channel: NSObject {
+    
+    var name: String?
+    var profile_image_name: String?
+    
+}
+
+```
+
+```swift
+func fetchFeedForUrlString(urlString: String, completion: @escaping([Video]) -> ()) {
+        let url: URL? = URL(string: urlString)
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            do {
+                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
+                var videos = [Video]()
+                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                for dictionary in json as! [[String: AnyObject]] {
+                    let video = Video()
+//                    video.title = dictionary["title"] as? String
+//                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
+//                    video.numberOfViews = dictionary["number_of_views"] as? NSNumber
+                    
+                    /* Use set values, model을 통해서 자동으로 mapping 시켜준다. */
+                    video.setValuesForKeys(dictionary)
+                    
+                    let channelDictionary = dictionary["channel"] as! [String: AnyObject]
+                    let channel = Channel()
+                                        /*** 아래 주석처리된 데이터들을 자동으로 mapping 시켜준다. ***/
+                    channel.setValuesForKeys(channelDictionary)
+//                    channel.name = channelDictionary["name"] as? String
+//                    channel.profileImagename = channelDictionary["profile_image_name"] as? String
+//                    video.channel = channel
+                    videos.append(video)
+                }
+                DispatchQueue.main.async {
+                    completion(videos)
+                }
+            } catch let jsonError {
+                print(jsonError)
+            }
+        }.resume()
+    }
+```
+
+❗️ `setValuesForKeys`  를 쓰려면 모든 데이터가 있어야한다. 예를들어 rest API를 통해서 데이터를 가져온다고 했을 때, 들어오는 모든 데이터가 model에 정의되어 있어야한다.
+
+⇒ 반드시 서버에서 들어오는 key:value 의 이름이 같아야한다.
+
+⇒ 반드시 `NSObject`  를 상속받아야 한다.
+
+⇒ Old fashioned way임. swift5에서 계속 에러가 나고 있다.
+
+⇒ Swift5 에서는 안씀. Codable, Decodable, Encodable로 대체됨.
+
+- Advanced Model
+
+```swift
+//
+//  Video.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/06.
+//
+
+import UIKit
+
+class Video: NSObject {
+    
+    var thumbnail_image_name: String?
+    var title: String?
+    var number_of_views: NSNumber?
+//    var uploadDate: NSDate?
+    var duration: NSNumber?
+    
+    var channel: Channel?
+    
+    
+//    var num_likes: NSNumber?
+    
+    //아래 코드 block은 아 ~ 그냥 이런게 있구나 정도로 보면 된다. 실제로 swift5는 NSObject보다는 Codable, Decodable, Encodable을 사용한다.
+    override func setValue(_ value: Any?, forKey key: String) {
+        if key == "channel" {
+            //custom channel setup
+            let channelDictionary = value as! [String: AnyObject]
+            self.channel = Channel()
+            self.channel?.setValuesForKeys(channelDictionary)
+            
+        } else {
+            super.setValue(value, forKey: key)
+        }
+        
+    }
+    
+    override init() {
+    
+    }
+    
+    //아래 코드 block은 아 ~ 그냥 이런게 있구나 정도로 보면 된다. 실제로 swift5는 NSObject보다는 Codable, Decodable, Encodable을 사용한다.
+    init(dictionary: [String: AnyObject]) {
+        super.init()
+        setValuesForKeys(dictionary)
+    }
+    
+}
+
+class Channel: NSObject {
+    
+    var name: String?
+    var profile_image_name: String?
+    
+}
+```
+
+### Network, API Service, Refactoring for safety
+
+```swift
+func fetchFeedForUrlString(urlString: String, completion: @escaping([Video]) -> ()) {
+    let url: URL? = URL(string: urlString)
+    URLSession.shared.dataTask(with: url!) { (data, response, error) in
+        
+        print("requesting data to url: \(url!)")
+        if error != nil {
+            print(error!.localizedDescription)
+            return
+        }
+                    
+        do {
+         
+            if let unwrappedData = data {
+                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                if let jsonDictoinaries = try JSONSerialization.jsonObject(with: unwrappedData, options: .mutableContainers) as? [[String: Any]] {
+                    var videos = [Video]()
+                    //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                    for dictionary in jsonDictoinaries {
+                        let video = Video()
+                        video.title = dictionary["title"] as? String
+                        video.thumbnail_image_name = dictionary["thumbnail_image_name"] as? String
+                        video.number_of_views = dictionary["number_of_views"] as? NSNumber
+
+                        /* Use set values, model을 통해서 자동으로 mapping 시켜준다. */
+    //                    video.setValuesForKeys(dictionary)
+                        
+                        print("dictionary: \(dictionary)")
+
+                        let channelDictionary = dictionary["channel"] as! [String: AnyObject]
+                        let channel = Channel()
+    //                    channel.setValuesForKeys(channelDictionary)
+                        channel.name = channelDictionary["name"] as? String
+                        channel.profile_image_name = channelDictionary["profile_image_name"] as? String
+                        video.channel = channel
+                        videos.append(video)
+                    }
+                    DispatchQueue.main.async {
+                        completion(videos)
+                    }
+                }
+            }
+            
+
+        } catch let jsonError {
+            print(jsonError)
+        }
+    }.resume()
+}
+```
+
+**ℹ️  How to use map**
+
+```swift
+let numbersArray = [1, 2, 3]
+let doubledNumberArray = numbersArray.map({return $0 * 2})
+let stringsArray = numbersArray.map({return "\($0 * 2)"})
+```
