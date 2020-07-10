@@ -2322,3 +2322,178 @@ class FeedCell: BaseCell, UICollectionViewDelegate, UICollectionViewDataSource, 
     
 }
 ```
+### CollectionView 최적화
+
+```swift
+func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    /** feedCell의 화면이 살짝 바깥으로 나가서 최적화,   height: view.frame.height - 50 **/
+    return CGSize(width: view.frame.width, height: view.frame.height - 50)
+}
+```
+
+# Lecture 14
+
+[https://www.youtube.com/watch?v=77nQN0JzBH4](https://www.youtube.com/watch?v=77nQN0JzBH4)
+
+# Create Other Tabbar Contents - Trending Cell
+
+### Add `fetchTrendingVideo()` onto `APIService`
+
+```swift
+func fetchTrendingVideo(completion: @escaping([Video]) -> ()) {
+        let url: URL? = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/trending.json")
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            
+            do {
+                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
+                var videos = [Video]()
+                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                for dictionary in json as! [[String: AnyObject]] {
+                    let video = Video()
+                    video.title = dictionary["title"] as? String
+                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
+                    let channelDictionary = dictionary["channel"] as! [String: AnyObject]
+                    let channel = Channel()
+                    channel.name = channelDictionary["name"] as? String
+                    channel.profileImagename = channelDictionary["profile_image_name"] as? String
+                    video.channel = channel
+                    videos.append(video)
+                }
+                
+                DispatchQueue.main.async {
+                    completion(videos)
+                }
+                
+            } catch let jsonError {
+                print(jsonError)
+            }
+            
+
+            
+            //String 형식으로 서버 response 받아오는 방법
+//            let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
+//            print(str)
+        }.resume()
+    }
+```
+
+ℹ️  Code로 navigationController 이용하는 법.. (segue 없이)
+
+```swift
+let dummySettingsViewController = UIViewController()
+dummySettingsViewController.view.backgroundColor = UIColor.white
+dummySettingsViewController.navigationItem.title = setting.name.rawValue
+navigationController?.navigationBar.tintColor = UIColor.white
+navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+navigationController?.pushViewController(dummySettingsViewController, animated: true)
+```
+
+### CollectionView를 이용해서 custom tabbar를 만들시에...
+
+- register cells
+
+```swift
+let cellId = "cellId"
+let trendingCellId = "trendingCellId"
+let subscriptionCellId = "subscriptionCellId"
+```
+
+- return cell dynamically
+
+```swift
+override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+    let FIRST_SCENE = 0
+    let SECOND_SCENE = 1
+    let THIRD_SCENE = 2
+
+    let identifier: String
+    
+    if indexPath.row == FIRST_SCENE {
+        identifier = cellId
+    } else if indexPath.row == SECOND_SCENE {
+        identifier = trendingCellId
+    } else if indexPath.row == THIRD_SCENE {
+        identifier = subscriptionCellId
+    } else { //default value
+        identifier = cellId
+    }
+        
+    //FIRST_SCENE이 default임.
+    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath)
+    
+    return cell
+
+}
+```
+
+### API Service Refactoring
+
+```swift
+//
+//  ApiService.swift
+//  Swift Youtube App Programmatically
+//
+//  Created by shin seunghyun on 2020/07/09.
+//
+
+import UIKit
+
+class ApiService: NSObject {
+
+    static let sharedInstance = ApiService()
+    
+    let baseURL = "https://s3-us-west-2.amazonaws.com/youtubeassets"
+    
+    func fetchVideos(completion: @escaping([Video]) -> ()) {
+        fetchFeedForUrlString(urlString: "\(baseURL)/home.json", completion: completion)
+    }
+    
+    func fetchTrendingVideo(completion: @escaping([Video]) -> ()) {
+        fetchFeedForUrlString(urlString: "\(baseURL)/trending.json", completion: completion)
+    }
+    
+    func fetchSubscriptionFeed(completion: @escaping([Video]) -> ()) {
+        fetchFeedForUrlString(urlString: "\(baseURL)/subscriptions.json", completion: completion)
+    }
+    
+    func fetchFeedForUrlString(urlString: String, completion: @escaping([Video]) -> ()) {
+        let url: URL? = URL(string: urlString)
+        URLSession.shared.dataTask(with: url!) { (data, response, error) in
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            do {
+                /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
+                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
+                var videos = [Video]()
+                //dictionary 형식으로 가져온다. 마치 SwiftyJson과 비슷함.
+                for dictionary in json as! [[String: AnyObject]] {
+                    let video = Video()
+                    video.title = dictionary["title"] as? String
+                    video.thumbnailImageName = dictionary["thumbnail_image_name"] as? String
+                    let channelDictionary = dictionary["channel"] as! [String: AnyObject]
+                    let channel = Channel()
+                    channel.name = channelDictionary["name"] as? String
+                    channel.profileImagename = channelDictionary["profile_image_name"] as? String
+                    video.channel = channel
+                    videos.append(video)
+                }
+                DispatchQueue.main.async {
+                    completion(videos)
+                }
+            } catch let jsonError {
+                print(jsonError)
+            }
+        }.resume()
+    }
+    
+}
+```

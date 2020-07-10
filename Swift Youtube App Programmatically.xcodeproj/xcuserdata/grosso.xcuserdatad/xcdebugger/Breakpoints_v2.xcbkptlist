@@ -18,5 +18,101 @@
             endingLineNumber = "68">
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6D057C0A-87EB-439C-9716-8CC1CDEC2059"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Swift Youtube App Programmatically/View/TrendingCell.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "14"
+            endingLineNumber = "14"
+            landmarkName = "fetchVideos()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "34350F16-7846-4DDF-9EAB-97B4D9AFE314"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Swift Youtube App Programmatically/View/TrendingCell.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "14"
+            endingLineNumber = "14"
+            landmarkName = "fetchVideos()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "EFDA65C8-085E-4625-8B44-21A4A0B76FD7"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Swift Youtube App Programmatically/View/TrendingCell.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "12"
+            endingLineNumber = "12"
+            landmarkName = "fetchVideos()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "B96D3CD9-3602-4455-9341-C2B617E055D7"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Swift Youtube App Programmatically/View/TrendingCell.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "13"
+            endingLineNumber = "13"
+            landmarkName = "fetchVideos()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "B96D3CD9-3602-4455-9341-C2B617E055D7 - 567b078e93adfaed"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Swift_Youtube_App_Programmatically.TrendingCell.fetchVideos() -&gt; ()"
+                  moduleName = "Swift Youtube App Programmatically"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/grosso/Desktop/Programming_source/Learning/ios/Swift%20Youtube%20App%20Programmatically/Swift%20Youtube%20App%20Programmatically/View/TrendingCell.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "13"
+                  endingLineNumber = "13"
+                  offsetFromSymbolStart = "30">
+               </Location>
+               <Location
+                  uuid = "B96D3CD9-3602-4455-9341-C2B617E055D7 - fdb0819c1ac61fb0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Array&lt;Swift_Youtube_App_Programmatically.Video&gt;) -&gt; () in Swift_Youtube_App_Programmatically.TrendingCell.fetchVideos() -&gt; ()"
+                  moduleName = "Swift Youtube App Programmatically"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/grosso/Desktop/Programming_source/Learning/ios/Swift%20Youtube%20App%20Programmatically/Swift%20Youtube%20App%20Programmatically/View/TrendingCell.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "14"
+                  endingLineNumber = "14"
+                  offsetFromSymbolStart = "34">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>

@@ -16,6 +16,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     let cellId = "cellId"
     let trendingCellId = "trendingCellId"
+    let subscriptionCellId = "subscriptionCellId"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,6 +62,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         /** Registering more than two cell requires different Cell Id **/
         collectionView.register(FeedCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(TrendingCell.self, forCellWithReuseIdentifier: trendingCellId)
+        collectionView.register(SubscriptionCell.self, forCellWithReuseIdentifier: subscriptionCellId)
         
         /* Adjust Collection View Position */
         // top에 만큼의 값을줌.
@@ -178,14 +180,22 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         let FIRST_SCENE = 0
         let SECOND_SCENE = 1
         let THIRD_SCENE = 2
-        let FOURTH_SCENE = 3
+    
+        let identifier: String
         
-        if indexPath.row == SECOND_SCENE {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: trendingCellId, for: indexPath)
-            return cell
+        if indexPath.row == FIRST_SCENE {
+            identifier = cellId
+        } else if indexPath.row == SECOND_SCENE {
+            identifier = trendingCellId
+        } else if indexPath.row == THIRD_SCENE {
+            identifier = subscriptionCellId
+        } else { //default value
+            identifier = cellId
         }
-
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
+            
+        //FIRST_SCENE이 default임.
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath)
+        
         return cell
     }
     

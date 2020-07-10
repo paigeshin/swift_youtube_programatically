@@ -11,15 +11,27 @@ class ApiService: NSObject {
 
     static let sharedInstance = ApiService()
     
+    let baseURL = "https://s3-us-west-2.amazonaws.com/youtubeassets"
+    
     func fetchVideos(completion: @escaping([Video]) -> ()) {
-        let url: URL? = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/home.json")
+        fetchFeedForUrlString(urlString: "\(baseURL)/home.json", completion: completion)
+    }
+    
+    func fetchTrendingVideo(completion: @escaping([Video]) -> ()) {
+        fetchFeedForUrlString(urlString: "\(baseURL)/trending.json", completion: completion)
+    }
+    
+    func fetchSubscriptionFeed(completion: @escaping([Video]) -> ()) {
+        fetchFeedForUrlString(urlString: "\(baseURL)/subscriptions.json", completion: completion)
+    }
+    
+    func fetchFeedForUrlString(urlString: String, completion: @escaping([Video]) -> ()) {
+        let url: URL? = URL(string: urlString)
         URLSession.shared.dataTask(with: url!) { (data, response, error) in
-            
             if error != nil {
                 print(error!.localizedDescription)
                 return
             }
-            
             do {
                 /* Mutable Containers -> 바뀔 수 있는 데이터를 암시함. */
                 let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
@@ -36,20 +48,12 @@ class ApiService: NSObject {
                     video.channel = channel
                     videos.append(video)
                 }
-                
                 DispatchQueue.main.async {
                     completion(videos)
                 }
-                
             } catch let jsonError {
                 print(jsonError)
             }
-            
-
-            
-            //String 형식으로 서버 response 받아오는 방법
-//            let str = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
-//            print(str)
         }.resume()
     }
     
