@@ -90,6 +90,7 @@ class MenuBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UIC
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! MenuCell
         cell.imageView.image = UIImage(systemName: imageNames[indexPath.row])
         cell.tintColor = UIColor.rgb(red: 91, green: 14, blue: 13)
+        
         /** Component **/
         //component로 만들 때는 아래 주석을 풀어주자
 //        cell.imageView.image = UIImage(named: imageNames[indexPath.row])?.withRenderingMode(.alwaysTemplate)

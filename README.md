@@ -2161,3 +2161,79 @@ func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPat
         homeController?.scrollToMenuIndex(menuIndex: indexPath.row)
     }
 ```
+# Lecture 13
+
+[https://www.youtube.com/watch?v=elvK3TYnzIw&t=1s](https://www.youtube.com/watch?v=elvK3TYnzIw&t=1s)
+
+ℹ️  `lazy var`
+
+- lazy var: we can access `self` inside of closure
+
+### HomeController
+
+- Set Up Title
+
+```swift
+//collectionView의 아이콘, 즉 custom tabbar icon을 클릭했을 시에 스크롤하게 한다.
+func scrollToMenuIndex(menuIndex: Int) {
+    let indexPath = IndexPath(item: menuIndex, section: 0)
+    collectionView.scrollToItem(at: indexPath, at: .right, animated: true)
+    
+    /* Set Up Title */
+    /** 기본적으로 navigationItem.titleView라는 값이 존재함. **/
+    /** Menu 부분 활성화 sync 맞춰줌  **/
+    if let titleLabel = navigationItem.titleView as? UILabel {
+        titleLabel.text = "  \(titles[menuIndex])"
+    }
+}
+
+/** Set Up Title **/
+let titles = ["Home", "Trending", "Subscription", "Account"]
+
+//Synchronization when user scrolled, scrolling시 아이콘이 선택이 안되는데 아이콘 포지션을 잘 맞춰준다.
+override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    let index = targetContentOffset.pointee.x / view.frame.width
+    let indexPath = IndexPath(item: Int(index), section: 0)
+    menuBar.collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+    
+    /* Set Up Title */
+    /** 기본적으로 navigationItem.titleView라는 값이 존재함. **/
+    if let titleLabel = navigationItem.titleView as? UILabel {
+        titleLabel.text = "  \(titles[indexPath.row])"
+    }
+}
+```
+
+### Refactoring
+
+```swift
+/** Set Up Title **/
+let titles = ["Home", "Trending", "Subscription", "Account"]
+
+private func setTitleForIndex(index: Int) {
+    /* Set Up Title */
+    /** 기본적으로 navigationItem.titleView라는 값이 존재함. **/
+    /** Menu 부분 활성화 sync 맞춰줌  **/
+    if let titleLabel = navigationItem.titleView as? UILabel {
+        titleLabel.text = "  \(titles[index])"
+    }
+}
+
+override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    //menubar control
+    //menubar의 slidebar가 움직일 수 있도록함.
+    //menuBar에 왼쪽 constraint가 잡혀있음. 그 값을 scrollView.content.x의 값을 넣으면 scroll할 때도 움직일 수 있도록 바꿀 수 있다.
+    menuBar.horizontalBarLeftAnchorConstraint?.constant = scrollView.contentOffset.x / 4
+}
+
+//Synchronization when user scrolled, scrolling시 아이콘이 선택이 안되는데 아이콘 포지션을 잘 맞춰준다.
+override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    let index = targetContentOffset.pointee.x / view.frame.width
+    let indexPath = IndexPath(item: Int(index), section: 0)
+    menuBar.collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+    
+    /* Set Up Title */
+    /** 기본적으로 navigationItem.titleView라는 값이 존재함. **/
+    setTitleForIndex(index: Int(index))
+}
+```

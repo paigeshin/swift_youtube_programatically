@@ -5,26 +5,16 @@
 //  Created by shin seunghyun on 2020/07/03.
 //
 
+/* 메인 화면의 collectionView는 tabBar를 관리한다. */
+
 import UIKit
 
 class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     
-    var videos: [Video]?
-    
     let cellId = "cellId"
-    
-    func fetchVideos() {
-        ApiService.sharedInstance.fetchVideos { (videos: [Video]) in
-            self.videos = videos
-            self.collectionView.reloadData()
-        }
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        /* Network */
-        fetchVideos()
         
         /* Navigation Controller Design */
 //        navigationItem.title = "Home"
@@ -62,7 +52,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
          class를 등록하는 방법이 있다.
          */
 //        collectionView.register(VideoCell.self, forCellWithReuseIdentifier: "cellId")
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
+//        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
+        collectionView.register(FeedCell.self, forCellWithReuseIdentifier: cellId)
         
         /* Adjust Collection View Position */
         // top에 만큼의 값을줌.
@@ -97,6 +88,16 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     func scrollToMenuIndex(menuIndex: Int) {
         let indexPath = IndexPath(item: menuIndex, section: 0)
         collectionView.scrollToItem(at: indexPath, at: .right, animated: true)
+        setTitleForIndex(index: menuIndex)
+    }
+    
+    private func setTitleForIndex(index: Int) {
+        /* Set Up Title */
+        /** 기본적으로 navigationItem.titleView라는 값이 존재함. **/
+        /** Menu 부분 활성화 sync 맞춰줌  **/
+        if let titleLabel = navigationItem.titleView as? UILabel {
+            titleLabel.text = "  \(titles[index])"
+        }
     }
     
     lazy var settingsLauncher: SettingsLauncher = {
@@ -132,13 +133,12 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     private func setupMenuBar() {
         
         /* navigation controller option */
-        navigationController?.hidesBarsOnSwipe = true
+//        navigationController?.hidesBarsOnSwipe = true
         
         /**
             navigationController?.hidesBarsOnSwipe = true
             원래 menuBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true, 이 코드를 적용하면
             menuBar를 제외한 navigation Controller가 hide 된다. 그 때, 중간에 비어있는 gap이 생기는데,  redView는 이 gap을 없애주려고 적용하는 코드다.
-         
          **/
         let redView = UIView()
         redView.backgroundColor = UIColor.rgb(red: 230, green: 32, blue: 31)
@@ -154,7 +154,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         //아래와 같이 처리해주면, menuBar는 `navigationController.hidesBarsOnSwipe`를 true를 주더라도 사라지지 않고 무조건 safearea의 아래에 걸린다.
 //        menuBar.topAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
-    
+
     override func scrollViewDidScroll(_ scrollView: UIScrollView) {
         //menubar control
         //menubar의 slidebar가 움직일 수 있도록함.
@@ -169,52 +169,31 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
         
-        let colors: [UIColor] = [.blue, .gray, .green, .cyan]
+//        let colors: [UIColor] = [.blue, .gray, .green, .cyan]
         
-        cell.backgroundColor = colors[indexPath.row]
+//        cell.backgroundColor = colors[indexPath.row]
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: view.frame.height)
+        /** feedCell의 화면이 살짝 바깥으로 나가서 최적화,   height: view.frame.height - 50 **/
+        return CGSize(width: view.frame.width, height: view.frame.height - 50)
     }
+    
+    /** Set Up Title **/
+    let titles = ["Home", "Trending", "Subscription", "Account"]
     
     //Synchronization when user scrolled, scrolling시 아이콘이 선택이 안되는데 아이콘 포지션을 잘 맞춰준다.
     override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         let index = targetContentOffset.pointee.x / view.frame.width
         let indexPath = IndexPath(item: Int(index), section: 0)
         menuBar.collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+        
+        /* Set Up Title */
+        /** 기본적으로 navigationItem.titleView라는 값이 존재함. **/
+        setTitleForIndex(index: Int(index))
     }
-    
-//    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-//        return videos?.count ?? 0
-//    }
-//
-//    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-//        //Register Cell
-//        let cell: VideoCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! VideoCell
-//        cell.video = videos![indexPath.row]
-//        return cell
-//    }
-//
-//    //각각의 cell container의 크기
-//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-//        //16:9
-//        let leftSideContstant: CGFloat = 16
-//        let rightSideConstant: CGFloat = 16
-//        let ratio: CGFloat = 9 / 16
-//        let height: CGFloat = (view.frame.width - leftSideContstant - rightSideConstant) * ratio
-//        //16:9 thumnail을 만들기 위해서, height의 크기를 다른 contraint constant만큼 더해준다.
-//        return CGSize(width: view.frame.width, height: height + 16 + 88)
-////        return CGSize(width: view.frame.width, height: 900)
-////        return CGSize(width: view.frame.width, height: 500)
-//    }
-//
-//    //각각 줄 간의 spacing
-//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-//        return 0
-//    }
-    
+
 }
 
 
