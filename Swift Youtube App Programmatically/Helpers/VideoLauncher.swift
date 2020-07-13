@@ -28,7 +28,6 @@ class VideoPlayerView: UIView {
         button.tintColor = .white
         //button is hidden by default
         button.isHidden = true
-        
         button.addTarget(self, action: #selector(handlePause), for: .touchUpInside)
         return button
     }()
@@ -54,6 +53,41 @@ class VideoPlayerView: UIView {
         isPlaying = !isPlaying
     }
     
+    /* 1. Video Slider: Create UILabel */
+    let videoLengthLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "00:00"
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.textAlignment = .right
+        return label
+    }()
+    
+    /* 3. Video Slider: Create UISlider */
+    let videoSlider: UISlider = {
+        let slider = UISlider()
+        slider.translatesAutoresizingMaskIntoConstraints = false
+        slider.minimumTrackTintColor = .red
+        slider.maximumTrackTintColor = .white
+//        slider.setThumbImage(UIImage(systemName: "circle"), for: .normal)
+        slider.addTarget(self, action: #selector(handleSliderChange), for: .touchUpInside)
+        return slider
+    }()
+    
+    /* 6. Video Slider: Handle slider change event */
+    @objc func handleSliderChange() {
+        print(videoSlider.value)
+        if let duration = player?.currentItem?.duration {
+            let totalSeconds = CMTimeGetSeconds(duration)
+            let value = Float64(videoSlider.value) * totalSeconds
+            let seekTime = CMTime(value: Int64(value), timescale: 1)
+            player?.seek(to: seekTime, completionHandler: { (completedSeek) in
+                
+            })
+        }
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -74,8 +108,23 @@ class VideoPlayerView: UIView {
         pausePlayButton.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         pausePlayButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
         pausePlayButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    
+        /* 2. Video Slider: add videoLengthLabel to controlContainerView */
+        controlsContainerView.addSubview(videoLengthLabel)
+        videoLengthLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -8).isActive = true
+        videoLengthLabel.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        videoLengthLabel.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        videoLengthLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
-        self.backgroundColor = .black
+        /* 4. Video Slider, add slider to controlContainerView */
+        controlsContainerView.addSubview(videoSlider)
+        videoSlider.rightAnchor.constraint(equalTo: videoLengthLabel.leftAnchor).isActive = true
+        videoSlider.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        videoSlider.leftAnchor.constraint(equalTo: leftAnchor).isActive = true
+        videoSlider.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        backgroundColor = .black
+    
     }
     
     var player: AVPlayer?
@@ -89,13 +138,14 @@ class VideoPlayerView: UIView {
             let playerLayer = AVPlayerLayer(player: player)
             self.layer.addSublayer(playerLayer)
             playerLayer.frame = self.frame
-            
             player?.play()
             
             /* Play가 시작됬는지 안됬는지 확인하기 */
             player?.addObserver(self, forKeyPath: "currentItem.loadedTimeRanges", options: .new, context: nil)
         }
     }
+    
+  
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         //This is when the player is ready and rendering frames
@@ -104,6 +154,15 @@ class VideoPlayerView: UIView {
             controlsContainerView.backgroundColor = .clear
             pausePlayButton.isHidden = false //시작되면 버튼을 다시 보여주게 한다.
             isPlaying = true
+            
+            /* 5. Video Slider: Change Actual Value */
+            if let duration = player?.currentItem?.duration {
+                let seconds = CMTimeGetSeconds(duration)
+                let secondsText = Int(seconds) % 60
+                let minutesText = String(format: "%02d", Int(seconds) / 60)
+                videoLengthLabel.text = "\(minutesText):\(secondsText)"
+            }
+            
         }
     }
     
