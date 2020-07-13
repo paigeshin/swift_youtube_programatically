@@ -53,13 +53,25 @@ class VideoPlayerView: UIView {
         isPlaying = !isPlaying
     }
     
+    /** UI Right Timer Label, decrement  **/
     /* 1. Video Slider: Create UILabel */
     let videoLengthLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "00:00"
         label.textColor = .white
-        label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.font = UIFont.boldSystemFont(ofSize: 13)
+        label.textAlignment = .right
+        return label
+    }()
+    
+    /** UI Left Timer Label, increment **/
+    let currentTimeLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "00:00"
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 13)
         label.textAlignment = .right
         return label
     }()
@@ -94,6 +106,9 @@ class VideoPlayerView: UIView {
         //set up video view
         setupPlayerView()
         
+        /** Add Gradient Layer **/
+        setupGradientLayer()
+        
         //set up container frame
         //video player button등을 담아줄 frame
         controlsContainerView.frame = self.frame
@@ -112,15 +127,22 @@ class VideoPlayerView: UIView {
         /* 2. Video Slider: add videoLengthLabel to controlContainerView */
         controlsContainerView.addSubview(videoLengthLabel)
         videoLengthLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -8).isActive = true
-        videoLengthLabel.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        videoLengthLabel.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        videoLengthLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        videoLengthLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -2).isActive = true
+        videoLengthLabel.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        videoLengthLabel.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        
+        /** Add Left Timer, increment **/
+        controlsContainerView.addSubview(currentTimeLabel)
+        currentTimeLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 8).isActive = true
+        currentTimeLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -2).isActive = true
+        currentTimeLabel.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        currentTimeLabel.heightAnchor.constraint(equalToConstant: 24).isActive = true
         
         /* 4. Video Slider, add slider to controlContainerView */
         controlsContainerView.addSubview(videoSlider)
-        videoSlider.rightAnchor.constraint(equalTo: videoLengthLabel.leftAnchor).isActive = true
+        videoSlider.rightAnchor.constraint(equalTo: videoLengthLabel.leftAnchor, constant: 8).isActive = true
         videoSlider.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        videoSlider.leftAnchor.constraint(equalTo: leftAnchor).isActive = true
+        videoSlider.leftAnchor.constraint(equalTo: currentTimeLabel.rightAnchor, constant: 3).isActive = true
         videoSlider.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         backgroundColor = .black
@@ -142,9 +164,25 @@ class VideoPlayerView: UIView {
             
             /* Play가 시작됬는지 안됬는지 확인하기 */
             player?.addObserver(self, forKeyPath: "currentItem.loadedTimeRanges", options: .new, context: nil)
+            
+            /** give time observer **/
+            //track player progress
+            let interval = CMTime(value: 1, timescale: 2)
+            player?.addPeriodicTimeObserver(forInterval: interval, queue: .main, using: { (time) in
+                //track timer
+                let seconds = CMTimeGetSeconds(time)
+                let secondsString = String(format: "%02d", Int(seconds) % 60)
+                let minutesString = String(format: "%02d", Int(seconds / 60))
+                self.currentTimeLabel.text = "\(minutesString):\(secondsString)"
+                //lets move the slider thumb
+                if let duration = self.player?.currentItem?.duration {
+                    let durationSeconds = CMTimeGetSeconds(duration)
+                    self.videoSlider.value = Float(seconds) / Float(durationSeconds)
+                }
+            })
+            
         }
     }
-    
   
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -164,6 +202,18 @@ class VideoPlayerView: UIView {
             }
             
         }
+    }
+    
+    private func setupGradientLayer() {
+        //1. initialize gradient layer
+        let gradientLayer = CAGradientLayer()
+        //2. specify frame
+        gradientLayer.frame = bounds
+        //3. add Color
+        gradientLayer.colors = [UIColor.clear.cgColor, UIColor.black.cgColor]
+        gradientLayer.locations = [0.7, 1.2]
+        //4. add to sublayer
+        controlsContainerView.layer.addSublayer(gradientLayer)
     }
     
     required init?(coder: NSCoder) {
